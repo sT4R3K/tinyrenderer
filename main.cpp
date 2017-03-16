@@ -1,5 +1,6 @@
+#include <cmath>
+
 #include "tgaimage.h"
-#include <cstdlib>
 
 void line (int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 
@@ -38,16 +39,21 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 		swap (y0, y1);
 	}
 
-	int y;
-	float t;
+	float a = abs (Dy / (float) Dx);
+	float error = 0;
+
+	int y = y0;
 
 	for (int x = x0; x <= x1; x++) {
-		t = (x - x0)/(float) Dx;
-		y = y0 + Dy*t;
-
 		if (steep)
 			image.set (y, x, color);
 		else
 			image.set (x, y, color);
+
+		error += a;
+		if (error > .5) {
+			y += (Dy>0 ? 1 : -1);
+			error--;
+		}
 	}
 } 
