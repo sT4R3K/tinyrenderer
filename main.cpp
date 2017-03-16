@@ -20,15 +20,15 @@ int main(int argc, char** argv) {
 }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) { 
-	const int dx = x1 - x0;
-	const int dy = y1 - y0;
+	const int Dx = x1 - x0;
+	const int Dy = y1 - y0;
 
-	int x;
 	int y;
+	float t;
 
-	for (float t = .0; t < 1.; t += 0.1) {
-		x = x0 + dx*t;
-		y = y0 + dy*t;
-		image.set(x,y,color);
+	for (int x = x0; x < x1; x++) {
+		t = (x - x0)/(float) Dx;
+		y = y0 + Dy*t;
+		image.set(x, y, color);
 	}
 } 
