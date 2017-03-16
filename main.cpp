@@ -39,8 +39,9 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 		swap (y0, y1);
 	}
 
-	float a = abs (Dy / (float) Dx);
-	float error = 0;
+	int Dy2 = abs (Dy) * 2;
+	int Dx2 = abs (Dx) * 2;
+	float error2 = 0;
 
 	int y = y0;
 
@@ -50,10 +51,10 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 		else
 			image.set (x, y, color);
 
-		error += a;
-		if (error > .5) {
+		error2 += Dy2;
+		if (error2 > Dx) {
 			y += (Dy>0 ? 1 : -1);
-			error--;
+			error2 -= Dx2;
 		}
 	}
 } 
