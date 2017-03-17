@@ -1,21 +1,48 @@
 #include <cmath>
+#include <vector>
 
 #include "tgaimage.h"
+#include "model.h"
+#include "geometry.h"
 
 void line (int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
+const int width  = 800;
+const int height = 800;
 
 using namespace std;
 
 int main(int argc, char** argv) {
-	TGAImage image(100, 100, TGAImage::RGB);
+	Model *model;
 
-	line(13, 20, 80, 40, image, white); 
-	line(20, 13, 40, 80, image, red); 
-	line(80, 40, 13, 20, image, red);
+	if (argc == 2) {
+        model = new Model (argv[1]);
+    } else {
+        model = new Model ("obj/african_head.obj");
+    }
 
+	TGAImage image(width, height, TGAImage::RGB);
+    for (int i=0; i<model->nfaces(); i++) {
+        std::vector<int> face = model->face(i);
+        for (int j=0; j<3; j++) {
+            Vec3f v0 = model->vert(face[j]);
+            Vec3f v1 = model->vert(face[(j+1)%3]);
+            int x0 = (v0.x+1.)*width/2.;
+            int y0 = (v0.y+1.)*height/2.;
+            int x1 = (v1.x+1.)*width/2.;
+            int y1 = (v1.y+1.)*height/2.;
+            line(x0, y0, x1, y1, image, white);
+        }
+    }
+
+    /*
+		line (400,720,20,20,image,red);
+		line (20,20,600,60,image,red);
+	    line (600,60,400,720,image,red);
+	//*/
+	
 	image.flip_vertically(); 
 	image.write_tga_file("output.tga");
 	
@@ -53,7 +80,7 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 
 		error2 += Dy2;
 		if (error2 > Dx) {
-			y += (Dy>0 ? 1 : -1);
+			y += (y1>y0 ? 1 : -1);
 			error2 -= Dx2;
 		}
 	}
