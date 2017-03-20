@@ -1,7 +1,7 @@
 # tinyrenderer ([Mr's Dmitry V. Sokolov Course](https://github.com/ssloy/tinyrenderer/wiki))
 
 1. Bresenham’s Line Drawing Algorithm
-    * [0.1](https://github.com/sT4R3K/tinyrenderer/tree/0179d054cc02ac7ba62730f18df6d4a798e0014b) : First attempt.
+    * [0.1](https://github.com/sT4R3K/tinyrenderer/tree/ce539120d47a1c7a13e2251a4cbb0afbcfb051f7) : First attempt.
     * [0.2](https://github.com/sT4R3K/tinyrenderer/tree/df9f5c00734afb957eb36b5b2f5ec1f2baf38db3) : Second attempt.
     * [0.3](https://github.com/sT4R3K/tinyrenderer/tree/3dc9e648374292f30d6be76508c269bafd4ef5af) : Third attempt.
     * [0.4](https://github.com/sT4R3K/tinyrenderer/tree/6704341b5159ea9a09d78041a46868c217052951) : Forth attempt.
