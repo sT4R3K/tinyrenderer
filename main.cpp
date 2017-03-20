@@ -23,8 +23,7 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 	const int dx = x1 - x0;
 	const int dy = y1 - y0;
 
-	int x;
-	int y;
+	int x, y;
 
 	for (float t = .0; t < 1.; t += 0.1) {
 		x = x0 + dx*t;
