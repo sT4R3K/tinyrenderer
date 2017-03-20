@@ -23,9 +23,9 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 	const int Dx = x1 - x0;
 	const int Dy = y1 - y0;
 
-	int y;
 	float t;
-
+	int y;
+	
 	for (int x = x0; x < x1; x++) {
 		t = (x - x0)/(float) Dx;
 		y = y0 + Dy*t;
