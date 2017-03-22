@@ -1,5 +1,6 @@
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 #include "tgaimage.h"
 #include "model.h"
@@ -24,9 +25,9 @@ int main(int argc, char** argv) {
 	}
 
 	TGAImage image(width, height, TGAImage::RGB);
-	for (int i=0; i<model->nfaces(); i++) {
+	for (int i=0, j; i<model->nfaces(); i++) {
 		std::vector<int> face = model->face(i);
-		for (int j=0; j<3; j++) {
+		for (j=0; j<3; j++) {
 			Vec3f v0 = model->vert(face[j]);
 			Vec3f v1 = model->vert(face[(j+1)%3]);
 			int x0 = (v0.x+1.)*width/2.;

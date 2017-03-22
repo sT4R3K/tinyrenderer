@@ -30,6 +30,12 @@ Model::Model(const char *filename) : verts_(), faces_() {
             faces_.push_back(f);
         }
     }
+
+    // Normaliser l'objet (coordonnées entre -1 et 1):
+    minMaxXY ();
+    normalize ();
+    minMaxXY ();
+
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }
 
@@ -50,5 +56,56 @@ std::vector<int> Model::face(int idx) {
 
 Vec3f Model::vert(int i) {
     return verts_[i];
+}
+
+void Model::minMaxXY () {
+    m_minX = verts_[0].x;
+    m_maxX = verts_[0].x;
+    m_minY = verts_[0].y;
+    m_maxY = verts_[0].y;
+
+    for (int i = 1; i < nverts (); i++) {
+        if (m_minX > verts_[i].x)
+            m_minX = verts_[i].x;
+        if (m_maxX < verts_[i].x)
+            m_maxX = verts_[i].x;
+        if (m_minY > verts_[i].y)
+            m_minY = verts_[i].y;
+        if (m_maxY < verts_[i].y)
+            m_maxY = verts_[i].y;
+    }
+}
+
+void Model::normalize () {
+    float width = std::abs (maxX () - minX ());
+    float height = std::abs (maxY () - minY ());
+    float maxWidthHeight = ((width>=height)? width : height);
+
+    // Centering coordinates around the origin:
+    float xStep = (maxX () + minX ()) / 2.;
+    float yStep = (maxY () + minY ()) / 2.;
+    for (int i = 0; i < nverts (); ++i) {
+        verts_[i].x = verts_[i].x - xStep;
+        verts_[i].y = verts_[i].y - yStep;
+    }
+
+    // Reducing coordinates to the range [-1;1]
+    for (int i = 0; i < nverts (); ++i) {
+        verts_[i].x = 2.*verts_[i].x/maxWidthHeight;
+        verts_[i].y = 2.*verts_[i].y/maxWidthHeight;
+    }
+}
+
+float Model::minX () {
+    return m_minX;
+}
+float Model::maxX () {
+    return m_maxX;
+}
+float Model::minY () {
+    return m_minY;
+}
+float Model::maxY () {
+    return m_maxY;
 }
 

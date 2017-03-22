@@ -8,6 +8,12 @@ class Model {
 private:
 	std::vector<Vec3f> verts_;
 	std::vector<std::vector<int> > faces_;
+
+	float m_minX;
+	float m_maxX;
+	float m_minY;
+	float m_maxY;
+
 public:
 	Model(const char *filename);
 	~Model();
@@ -15,6 +21,14 @@ public:
 	int nfaces();
 	Vec3f vert(int i);
 	std::vector<int> face(int idx);
+
+	void minMaxXY ();
+	float minX ();
+	float maxX ();
+	float minY ();
+	float maxY ();
+
+	void normalize ();
 };
 
 #endif //__MODEL_H__
