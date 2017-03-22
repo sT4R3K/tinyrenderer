@@ -38,8 +38,8 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 		swap (y0, y1);
 	}
 
-	int y;
 	float t;
+	int y;
 
 	for (int x = x0; x <= x1; x++) {
 		t = (x - x0)/(float) Dx;
