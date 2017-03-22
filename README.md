@@ -2,7 +2,7 @@
 
 1. Bresenham’s Line Drawing Algorithm
     * [0.1](https://github.com/sT4R3K/tinyrenderer/tree/57ba654997e9e0b5fa70a18c1dcc959c6436c87f) : First attempt.
-    * [0.2](https://github.com/sT4R3K/tinyrenderer/tree/df9f5c00734afb957eb36b5b2f5ec1f2baf38db3) : Second attempt.
+    * [0.2](https://github.com/sT4R3K/tinyrenderer/tree/6746774dc92fca82794ff71d2eca3a0603f83908) : Second attempt.
     * [0.3](https://github.com/sT4R3K/tinyrenderer/tree/3dc9e648374292f30d6be76508c269bafd4ef5af) : Third attempt.
     * [0.4](https://github.com/sT4R3K/tinyrenderer/tree/6704341b5159ea9a09d78041a46868c217052951) : Forth attempt.
     * [0.5](https://github.com/sT4R3K/tinyrenderer/tree/dba7e153175995331091f609825cdf15560cd42f) : Fifth attempt.
