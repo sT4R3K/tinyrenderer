@@ -36,12 +36,6 @@ int main(int argc, char** argv) {
             line(x0, y0, x1, y1, image, white);
         }
     }
-
-    /*
-		line (400,720,20,20,image,red);
-		line (20,20,600,60,image,red);
-	    line (600,60,400,720,image,red);
-	//*/
 	
 	image.flip_vertically(); 
 	image.write_tga_file("output.tga");
@@ -50,11 +44,11 @@ int main(int argc, char** argv) {
 }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) { 
-	int Dx = abs (x1 - x0);
-	int Dy = abs (y1 - y0);
+	int Dx = x1 - x0;
+	int Dy = y1 - y0;
 
 	bool steep = false;
-	if (Dx < Dy) {
+	if (abs (Dx) < abs (Dy)) {
 		swap (x0, y0);
 		swap (x1, y1);
 		swap (Dx, Dy);
@@ -64,15 +58,17 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 	if (x0 > x1) {
 		swap (x0, x1);
 		swap (y0, y1);
+		Dx *= -1;
+		Dy *= -1;
 	}
 
 	int Dy2 = abs (Dy) * 2;
 	int Dx2 = abs (Dx) * 2;
-	float error2 = 0;
+	int error2 = 0;
 
-	int y = y0;
+	int step = (Dy>0 ? 1 : -1);
 
-	for (int x = x0; x <= x1; x++) {
+	for (int x = x0, y = y0; x <= x1; x++) {
 		if (steep)
 			image.set (y, x, color);
 		else
@@ -80,8 +76,8 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 
 		error2 += Dy2;
 		if (error2 > Dx) {
-			y += (y1>y0 ? 1 : -1);
+			y += step;
 			error2 -= Dx2;
 		}
 	}
-} 
+}
