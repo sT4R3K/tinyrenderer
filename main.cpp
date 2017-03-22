@@ -23,11 +23,11 @@ int main(int argc, char** argv) {
 }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) { 
-	int Dx = abs (x1 - x0);
-	int Dy = abs (y1 - y0);
+	int Dx = x1 - x0;
+	int Dy = y1 - y0;
 
 	bool steep = false;
-	if (Dx < Dy) {
+	if (abs (Dx) < abs (Dy)) {
 		swap (x0, y0);
 		swap (x1, y1);
 		swap (Dx, Dy);
@@ -37,14 +37,16 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 	if (x0 > x1) {
 		swap (x0, x1);
 		swap (y0, y1);
+		Dx *= -1;
+		Dy *= -1;
 	}
 
 	float a = abs (Dy / (float) Dx);
 	float error = 0;
 
-	int y = y0;
+	int step = (Dy>0 ? 1 : -1);
 
-	for (int x = x0; x <= x1; x++) {
+	for (int x = x0, y = y0; x <= x1; x++) {
 		if (steep)
 			image.set (y, x, color);
 		else
@@ -52,7 +54,7 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 
 		error += a;
 		if (error > .5) {
-			y += (Dy>0 ? 1 : -1);
+			y += step;
 			error--;
 		}
 	}
