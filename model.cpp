@@ -3,9 +3,10 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 #include "model.h"
 
-Model::Model(const char *filename) : verts_(), faces_() {
+Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
     std::ifstream in;
     in.open (filename, std::ifstream::in);
     if (in.fail()) return;
@@ -20,16 +21,52 @@ Model::Model(const char *filename) : verts_(), faces_() {
             for (int i=0;i<3;i++) iss >> v.raw[i];
             verts_.push_back(v);
         } else if (!line.compare(0, 2, "f ")) {
+            // Check if the face is a triangle:
+            if (nSides (line) != 3) {
+                std::cerr << "The object in \"" << filename << "\" contains at least a face that is not a triangle." << std::endl;
+                std::cerr << "Aborted!" << std::endl;
+                exit (0); // The dirty way XD
+            }
+
             std::vector<int> f;
             int itrash, idx;
             iss >> trash;
-            while (iss >> idx >> trash >> itrash >> trash >> itrash) {
-                idx--; // in wavefront obj all indices start at 1, not zero
-                f.push_back(idx);
+
+            facesFormat (line);
+            switch (m_facesFormat) {
+                case 1: // f v v v
+                    while (iss >> idx) {
+                        idx--; // in wavefront obj all indices start at 1, not zero
+                        f.push_back(idx);
+                    }
+                    break;
+                case 2: // f v/vt v/vt v/vt
+                    while (iss >> idx >> trash >> itrash) {
+                        idx--;
+                        f.push_back(idx);
+                    }
+                    break;
+                case 3: // f v/vt/vn v/vt/vn v/vt/vn
+                    while (iss >> idx >> trash >> itrash >> trash >> itrash) {
+                        idx--;
+                        f.push_back(idx);
+                    }
+                    break;
+                case 4: // f v//vn v//vn v//vn
+                    while (iss >> idx >> trash >> trash >> itrash) {
+                        idx--;
+                        f.push_back(idx);
+                    }
+                    break;
             }
             faces_.push_back(f);
         }
     }
+
+    // Normaliser l'objet (coordonnées entre -1 et 1):
+    minMaxXY ();
+    normalize ();
+
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }
 
@@ -52,3 +89,101 @@ Vec3f Model::vert(int i) {
     return verts_[i];
 }
 
+void Model::minMaxXY () {
+    m_minX = verts_[0].x;
+    m_maxX = verts_[0].x;
+    m_minY = verts_[0].y;
+    m_maxY = verts_[0].y;
+
+    for (int i = 1; i < nverts (); i++) {
+        if (m_minX > verts_[i].x)
+            m_minX = verts_[i].x;
+        if (m_maxX < verts_[i].x)
+            m_maxX = verts_[i].x;
+        if (m_minY > verts_[i].y)
+            m_minY = verts_[i].y;
+        if (m_maxY < verts_[i].y)
+            m_maxY = verts_[i].y;
+    }
+}
+
+void Model::normalize () {
+    float width = std::abs (maxX () - minX ());
+    float height = std::abs (maxY () - minY ());
+    float maxWidthHeight = ((width>=height)? width : height);
+
+    // Centering coordinates around the origin:
+    float xStep = (maxX () + minX ()) / 2.;
+    float yStep = (maxY () + minY ()) / 2.;
+    for (int i = 0; i < nverts (); ++i) {
+        verts_[i].x = verts_[i].x - xStep;
+        verts_[i].y = verts_[i].y - yStep;
+    }
+
+    // Reducing coordinates to the range [-1;1]
+    for (int i = 0; i < nverts (); ++i) {
+        verts_[i].x = 2.*verts_[i].x/maxWidthHeight;
+        verts_[i].y = 2.*verts_[i].y/maxWidthHeight;
+    }
+}
+
+float Model::minX () {
+    return m_minX;
+}
+float Model::maxX () {
+    return m_maxX;
+}
+float Model::minY () {
+    return m_minY;
+}
+float Model::maxY () {
+    return m_maxY;
+}
+
+int Model::nSides (std::string line) {
+    int n = 0;
+    for (unsigned int i = 0; i < line.length (); i++)
+        for (n++; i < line.length () && line.at (i) != ' '; i++); 
+    
+    return n-1; // Ignore the 'f'.
+}
+
+/* 
+    We sould be able to parse all the following faces representations:
+        1: f v v v
+        2: f v/vt v/vt v/vt
+        3: f v/vt/vn v/vt/vn v/vt/vn
+        4: f v//vn v//vn v//vn
+*/
+void Model::facesFormat (std::string line) {
+    // This function will be executed only one time during the lifetime of the object:
+    if (m_facesFormat != 0)
+        return;
+
+    int n = 0;
+    // Counting the '/' s:
+    for (unsigned int i = 0; i < line.length (); i++)
+        if (line.at (i) == '/')
+            n++;
+
+    switch (n) {
+        case 0:
+            m_facesFormat = 1;
+            return;
+        case 3:
+            m_facesFormat = 2;
+            return;
+        case 6:
+            break;
+        default:
+            std::cerr << "Unknown faces representation!" << std::endl;
+            exit (0); // No time for a fancy way >__<
+    }
+
+    // If we get here, it means that we found six slashes '/'
+    // We search for double slashes:
+    if (line.find ("//") == std::string::npos)
+        m_facesFormat = 3;
+    else
+        m_facesFormat = 4;
+}
