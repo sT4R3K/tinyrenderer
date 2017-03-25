@@ -66,7 +66,7 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
     // Normaliser l'objet (coordonnées entre -1 et 1):
     minMaxXY ();
     normalize ();
-    
+
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }
 
@@ -180,7 +180,7 @@ void Model::facesFormat (std::string line) {
             exit (0); // No time for a fancy way >__<
     }
 
-    // If we get here, it means that we found six slashes
+    // If we get here, it means that we found six slashes '/'
     // We search for double slashes:
     if (line.find ("//") == std::string::npos)
         m_facesFormat = 3;

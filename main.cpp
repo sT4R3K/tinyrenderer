@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
 		}
 	}
 
-
 	image.flip_vertically(); 
 	image.write_tga_file("output.tga");
 	
