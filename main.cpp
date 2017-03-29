@@ -34,8 +34,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
-
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	if (t0.y == t1.y && t0.y == t2.y) return;
 
