@@ -43,13 +43,9 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	if (t[0].y > t[2].y) std::swap (t[0], t[2]);
 	if (t[1].y > t[2].y) std::swap (t[1], t[2]);
 
-	int Dx10 = t[1].x - t[0].x;
-	int Dx20 = t[2].x - t[0].x;
-	int Dx21 = t[2].x - t[1].x;
-
-	int Dy10 = t[1].y - t[0].y;
-	int Dy20 = t[2].y - t[0].y;
-	int Dy21 = t[2].y - t[1].y;
+	int Dx10 = t[1].x - t[0].x, Dy10 = t[1].y - t[0].y;
+	int Dx20 = t[2].x - t[0].x, Dy20 = t[2].y - t[0].y;
+	int Dx21 = t[2].x - t[1].x, Dy21 = t[2].y - t[1].y;
 
 	int xi = t[0].x, xj = t[0].x;
 	float ti,tj;
