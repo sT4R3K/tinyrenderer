@@ -7,7 +7,6 @@
 #include "geometry.h"
 
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color);
-void line (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -35,6 +34,8 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+
+
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	if (t0.y == t1.y && t0.y == t2.y) return;
 
@@ -56,45 +57,9 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		tj = (y - t[0].y) / (float) Dy20;
 		xi = t[(second_half?1:0)].x + (second_half?Dx21:Dx10) * ti;
 		xj = t[0].x + Dx20 * tj;
-		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
-	}
-}
 
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
-	int Dx = p1.x - p0.x;
-	int Dy = p1.y - p0.y;
-
-	bool steep = false;
-	if (abs (Dx) < abs (Dy)) {
-		swap (p0.x, p0.y);
-		swap (p1.x, p1.y);
-		swap (Dx, Dy);
-		steep = true;
-	}
-
-	if (p0.x > p1.x) {
-		swap (p0.x, p1.x);
-		swap (p0.y, p1.y);
-		Dx *= -1;
-		Dy *= -1;
-	}
-
-	int Dy2 = abs (Dy) * 2;
-	int Dx2 = abs (Dx) * 2;
-	int error2 = 0;
-
-	int step = (Dy>0 ? 1 : -1);
-
-	for (int x = p0.x, y = p0.y; x <= p1.x; x++) {
-		if (steep)
-			image.set (y, x, color);
-		else
+		if (xj < xi) std::swap (xi, xj);
+		for (int x = xi;  x < xj; x++)
 			image.set (x, y, color);
-
-		error2 += Dy2;
-		if (error2 > Dx) {
-			y += step;
-			error2 -= Dx2;
-		}
 	}
 }
