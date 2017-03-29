@@ -36,6 +36,8 @@ int main(int argc, char** argv) {
 }
 
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
+	if (t0.y == t1.y && t0.y == t2.y) return;
+
 	Vec2i t[3] = {t0,t1,t2};
 	if (t[0].y > t[1].y) std::swap (t[0], t[1]);
 	if (t[0].y > t[2].y) std::swap (t[0], t[2]);
@@ -52,25 +54,14 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 	int xi = t[0].x, xj = t[0].x;
 	float ti,tj;
 
-	for (int y = t[0].y; y < t[1].y; y++) {
-		ti = (y - t[0].y) / (float) Dy10;
+	for (int y = t[0].y; y < t[2].y; y++) {
+		bool second_half = y > t[1].y || t[1].y == t[0].y;
+		ti = (y - t[(second_half?1:0)].y) / (float) (second_half?Dy21:Dy10);
 		tj = (y - t[0].y) / (float) Dy20;
-		xi = t[0].x + Dx10 * ti;
+		xi = t[(second_half?1:0)].x + (second_half?Dx21:Dx10) * ti;
 		xj = t[0].x + Dx20 * tj;
 		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
 	}
-
-	for (int y = t[1].y; y < t[2].y; y++) {
-		ti = (y - t[1].y) / (float) Dy21;
-		tj = (y - t[0].y) / (float) Dy20;
-		xi = t[1].x + Dx21 * ti;
-		xj = t[0].x + Dx20 * tj;
-		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
-	}
-
-	//line (t0, t1, image, color);
-	//line (t1, t2, image, color);
-	//line (t2, t0, image, color);
 }
 
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
