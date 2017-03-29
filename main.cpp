@@ -36,9 +36,34 @@ int main(int argc, char** argv) {
 }
 
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
-	line (t0, t1, image, color);
-	line (t1, t2, image, color);
-	line (t2, t0, image, color);
+	Vec2i t[3] = {t0,t1,t2};
+	if (t[0].y > t[1].y) std::swap (t[0], t[1]);
+	if (t[0].y > t[2].y) std::swap (t[0], t[2]);
+	if (t[1].y > t[2].y) std::swap (t[1], t[2]);
+
+	int Dx10 = t[1].x - t[0].x;
+	int Dx20 = t[2].x - t[0].x;
+	int Dx21 = t[2].x - t[1].x;
+
+	int Dy10 = t[1].y - t[0].y;
+	int Dy20 = t[2].y - t[0].y;
+	int Dy21 = t[2].y - t[1].y;
+
+	int xi = t[0].x, xj = t[0].x;
+	float ti,tj;
+
+	for (int y = t[0].y; y < t[1].y; y++) {
+		ti = (y - t[0].y) / (float) Dy10;
+		tj = (y - t[0].y) / (float) Dy20;
+		xi = t[0].x + Dx10 * ti;
+		xj = t[0].x + Dx20 * tj;
+		image.set (xi, y, red);
+		image.set (xj, y, green);
+	}
+
+	//line (t0, t1, image, color);
+	//line (t1, t2, image, color);
+	//line (t2, t0, image, color);
 }
 
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
