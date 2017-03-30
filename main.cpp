@@ -6,7 +6,8 @@
 #include "model.h"
 #include "geometry.h"
 
-void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color);
+Vec3f barycentric (Vec2i *pts, Vec2i P);
+void triangle (Vec2i *pts, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -24,9 +25,9 @@ int main(int argc, char** argv) {
     Vec2i t1[3] = {Vec2i(180, 50),  Vec2i(150, 1),   Vec2i(70, 180)};
     Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
 
-    triangle(t0[0], t0[1], t0[2], image, red);
-    triangle(t1[0], t1[1], t1[2], image, white);
-    triangle(t2[0], t2[1], t2[2], image, green);
+    triangle(t0, image, red);
+    triangle(t1, image, white);
+    triangle(t2, image, green);
 
 	image.flip_vertically(); 
 	image.write_tga_file("output.tga");
@@ -34,30 +35,30 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
-	if (t0.y == t1.y && t0.y == t2.y) return;
+Vec3f barycentric (Vec2i *pts, Vec2i P) { 	// TODO: degenerate triangles.
+	Vec2i A = pts[0], B = pts[1], C = pts[2];
 
-	Vec2i t[3] = {t0,t1,t2};
-	if (t[0].y > t[1].y) std::swap (t[0], t[1]);
-	if (t[0].y > t[2].y) std::swap (t[0], t[2]);
-	if (t[1].y > t[2].y) std::swap (t[1], t[2]);
+	int D = (A.x-C.x)*(B.y-C.y) - (B.x-C.x)*(A.y-C.y);
 
-	int Dx10 = t[1].x - t[0].x, Dy10 = t[1].y - t[0].y;
-	int Dx20 = t[2].x - t[0].x, Dy20 = t[2].y - t[0].y;
-	int Dx21 = t[2].x - t[1].x, Dy21 = t[2].y - t[1].y;
+	float alpha = ((B.y-C.y)*(P.x-C.x) + (C.x-B.x)*(P.y-C.y)) / (float) D;
+	float beta = ((C.y-A.y)*(P.x-C.x) + (A.x-C.x)*(P.y-C.y)) / (float) D;
 
-	int xi = t[0].x, xj = t[0].x;
-	float ti,tj;
+	return Vec3f (alpha, beta, (1. - alpha - beta));
+}
 
-	for (int y = t[0].y; y < t[2].y; y++) {
-		bool second_half = y > t[1].y || t[1].y == t[0].y;
-		ti = (y - t[(second_half?1:0)].y) / (float) (second_half?Dy21:Dy10);
-		tj = (y - t[0].y) / (float) Dy20;
-		xi = t[(second_half?1:0)].x + (second_half?Dx21:Dx10) * ti;
-		xj = t[0].x + Dx20 * tj;
+void triangle (Vec2i  *pts, TGAImage &image, TGAColor color) {
+	Vec2i min_max [2]; // [min_x, min_y, max_x, max_y]
+	for (int i = 0; i < 2; i++)
+		for (int j = 0; j < 2; j++)
+			min_max[i][j] =  (i==0)? min (pts[0][j], min (pts[1][j], pts[2][j])) : max (pts[0][j], max (pts[1][j], pts[2][j]));
+	Vec2i bboxmin (max (0, min_max[0][0]), max (0, min_max[0][1]));
+	Vec2i bboxmax (min (image.get_width()-1, min_max[1][0]), min (image.get_height()-1, min_max[1][1]));
 
-		if (xj < xi) std::swap (xi, xj);
-		for (int x = xi;  x < xj; x++)
-			image.set (x, y, color);
-	}
+	Vec2i P;
+	for (P.x = bboxmin.x; P.x < bboxmax.x; P.x++)
+		for (P.y = bboxmin.y; P.y < bboxmax.y; P.y++) {
+			Vec3f bc_P = barycentric (pts, P);
+			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0)
+				image.set (P.x, P.y, color);
+		}
 }
