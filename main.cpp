@@ -1,12 +1,14 @@
-#include <cmath>
-#include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <vector>
+#include <limits>
+#include <cmath>
 
 #include "tgaimage.h"
 #include "model.h"
 #include "geometry.h"
 
+void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
 Vec3f barycentric (Vec2i *pts, Vec2i P);
 void triangle (Vec2i *pts, TGAImage &image, TGAColor color);
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
@@ -32,10 +34,39 @@ int main(int argc, char** argv) {
 	// screen line
 	line(Vec2i(10, 10), Vec2i(790, 10), scene, white);
 
+	TGAImage render (width, 16, TGAImage::RGB);
+	int ybuffer[width];
+	for (int i = 0; i < width; i++) {
+		ybuffer[i] = numeric_limits<int>::min ();
+	}
+
+	rasterize (Vec2i (20, 34), Vec2i (744, 400), render, red, ybuffer);
+	rasterize (Vec2i (120, 434), Vec2i (444, 400), render, green, ybuffer);
+	rasterize (Vec2i (330, 463), Vec2i (594, 200), render, blue, ybuffer);
+
 	scene.flip_vertically(); 
-	scene.write_tga_file("output.tga");
+	scene.write_tga_file("scene.tga");
+
+	render.flip_vertically(); 
+	render.write_tga_file("render.tga");
 	
 	return 0;
+}
+
+void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer) {
+	if (p0.x > p1.x)
+		swap (p0, p1);
+
+	int Dx = (p1.x - p0.x), Dy = (p1.y - p0.y);
+	for (int x = p0.x; x <= p1.x; x++) {
+		float t = (x - p0.x) / (float) Dx;
+		int y = p0.y + Dy * t;
+		if (ybuffer[x] < y) {
+			ybuffer[x] = y;
+			for (int i = 0; i <16; i++)
+				image.set (x, i, color);
+		}
+	}
 }
 
 Vec3f barycentric (Vec2i *pts, Vec2i P) { 	// TODO: degenerate triangles.
