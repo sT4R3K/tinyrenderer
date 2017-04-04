@@ -67,10 +67,6 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		xj = t[0].x + Dx20 * tj;
 		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
 	}
-
-	//line (t0, t1, image, color);
-	//line (t1, t2, image, color);
-	//line (t2, t0, image, color);
 }
 
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
