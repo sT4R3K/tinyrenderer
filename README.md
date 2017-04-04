@@ -9,3 +9,13 @@
     * [1.0](https://github.com/sT4R3K/tinyrenderer/tree/1.0) : Final attempt.
 
 2. Triangle rasterization and back face culling
+   * [1.1](https://github.com/sT4R3K/tinyrenderer/tree/1.1) :
+   * [1.2](https://github.com/sT4R3K/tinyrenderer/tree/1.2) :
+   * [1.3](https://github.com/sT4R3K/tinyrenderer/tree/1.3) :
+   * [1.4](https://github.com/sT4R3K/tinyrenderer/tree/1.4) :
+   * [1.5](https://github.com/sT4R3K/tinyrenderer/tree/1.5) :
+   * [2.0](https://github.com/sT4R3K/tinyrenderer/tree/2.0) :
+
+3. Hidden faces removal (z buffer)
+   * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) :
+   * [2.2](https://github.com/sT4R3K/tinyrenderer/tree/2.2) :
