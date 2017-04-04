@@ -60,10 +60,6 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		image.set (xi, y, red);
 		image.set (xj, y, green);
 	}
-
-	//line (t0, t1, image, color);
-	//line (t1, t2, image, color);
-	//line (t2, t0, image, color);
 }
 
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
