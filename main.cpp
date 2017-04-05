@@ -6,6 +6,7 @@
 #include "model.h"
 #include "geometry.h"
 
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -59,5 +60,44 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		if (xj < xi) std::swap (xi, xj);
 		for (int x = xi;  x < xj; x++)
 			image.set (x, y, color);
+	}
+}
+
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
+	int Dx = p1.x - p0.x;
+	int Dy = p1.y - p0.y;
+
+	bool steep = false;
+	if (abs (Dx) < abs (Dy)) {
+		swap (p0.x, p0.y);
+		swap (p1.x, p1.y);
+		swap (Dx, Dy);
+		steep = true;
+	}
+
+	if (p0.x > p1.x) {
+		swap (p0.x, p1.x);
+		swap (p0.y, p1.y);
+		Dx *= -1;
+		Dy *= -1;
+	}
+
+	int Dy2 = abs (Dy) * 2;
+	int Dx2 = abs (Dx) * 2;
+	int error2 = 0;
+
+	int step = (Dy>0 ? 1 : -1);
+
+	for (int x = p0.x, y = p0.y; x <= p1.x; x++) {
+		if (steep)
+			image.set (y, x, color);
+		else
+			image.set (x, y, color);
+
+		error2 += Dy2;
+		if (error2 > Dx) {
+			y += step;
+			error2 -= Dx2;
+		}
 	}
 }
