@@ -9,13 +9,12 @@
     * [1.0](https://github.com/sT4R3K/tinyrenderer/tree/1.0) : Final attempt.
 
 2. Triangle rasterization and back face culling
-   * [1.1](https://github.com/sT4R3K/tinyrenderer/tree/1.1) :
-   * [1.2](https://github.com/sT4R3K/tinyrenderer/tree/1.2) :
-   * [1.3](https://github.com/sT4R3K/tinyrenderer/tree/1.3) :
-   * [1.4](https://github.com/sT4R3K/tinyrenderer/tree/1.4) :
-   * [1.5](https://github.com/sT4R3K/tinyrenderer/tree/1.5) :
-   * [2.0](https://github.com/sT4R3K/tinyrenderer/tree/2.0) :
+   * [1.1](https://github.com/sT4R3K/tinyrenderer/tree/1.1) : Line sweeping (triangle's bottom part).
+   * [1.2](https://github.com/sT4R3K/tinyrenderer/tree/1.2) : Line sweeping (filled triangle).
+   * [1.3](https://github.com/sT4R3K/tinyrenderer/tree/1.3) : Line sweeping (less readable version).
+   * [1.4](https://github.com/sT4R3K/tinyrenderer/tree/1.4) : A better method (using barycentric coordinates).
+   * [1.5](https://github.com/sT4R3K/tinyrenderer/tree/1.5) : Flat shading render (clown-colors).
+   * [2.0](https://github.com/sT4R3K/tinyrenderer/tree/2.0) : Flat shading render (adding lighting).
 
 3. Hidden faces removal (z buffer)
-   * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) :
-   * [2.2](https://github.com/sT4R3K/tinyrenderer/tree/2.2) :
+   * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) : Y-Buffer (rendering a 2D scene on 1D screen).
