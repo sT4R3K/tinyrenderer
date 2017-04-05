@@ -9,6 +9,7 @@
 
 Vec3f barycentric (Vec2i *pts, Vec2i P);
 void triangle (Vec2i *pts, TGAImage &image, TGAColor color);
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -57,7 +58,7 @@ Vec3f barycentric (Vec2i *pts, Vec2i P) { 	// TODO: degenerate triangles.
 }
 
 void triangle (Vec2i  *pts, TGAImage &image, TGAColor color) {
-	Vec2i min_max [2]; // [min_x, min_y, max_x, max_y]
+	Vec2i min_max [2]; // [(min_x, min_y), (max_x, max_y)]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 			min_max[i][j] =  (i==0)? min (pts[0][j], min (pts[1][j], pts[2][j])) : max (pts[0][j], max (pts[1][j], pts[2][j]));
@@ -71,4 +72,43 @@ void triangle (Vec2i  *pts, TGAImage &image, TGAColor color) {
 			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0)
 				image.set (P.x, P.y, color);
 		}
+}
+
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
+	int Dx = p1.x - p0.x;
+	int Dy = p1.y - p0.y;
+
+	bool steep = false;
+	if (abs (Dx) < abs (Dy)) {
+		swap (p0.x, p0.y);
+		swap (p1.x, p1.y);
+		swap (Dx, Dy);
+		steep = true;
+	}
+
+	if (p0.x > p1.x) {
+		swap (p0.x, p1.x);
+		swap (p0.y, p1.y);
+		Dx *= -1;
+		Dy *= -1;
+	}
+
+	int Dy2 = abs (Dy) * 2;
+	int Dx2 = abs (Dx) * 2;
+	int error2 = 0;
+
+	int step = (Dy>0 ? 1 : -1);
+
+	for (int x = p0.x, y = p0.y; x <= p1.x; x++) {
+		if (steep)
+			image.set (y, x, color);
+		else
+			image.set (x, y, color);
+
+		error2 += Dy2;
+		if (error2 > Dx) {
+			y += step;
+			error2 -= Dx2;
+		}
+	}
 }
