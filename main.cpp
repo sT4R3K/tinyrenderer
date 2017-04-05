@@ -57,7 +57,10 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		tj = (y - t[0].y) / (float) Dy20;
 		xi = t[0].x + Dx10 * ti;
 		xj = t[0].x + Dx20 * tj;
-		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
+		
+		if (xj < xi) swap (xi, xj);
+		for (int x = xi;  x < xj; x++)
+			image.set (x, y, color);
 	}
 
 	for (int y = t[1].y; y < t[2].y; y++) {
@@ -65,7 +68,10 @@ void triangle (Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
 		tj = (y - t[0].y) / (float) Dy20;
 		xi = t[1].x + Dx21 * ti;
 		xj = t[0].x + Dx20 * tj;
-		line (Vec2i(xi,y), Vec2i(xj,y), image, color);
+		
+		if (xj < xi) swap (xi, xj);
+		for (int x = xi;  x < xj; x++)
+			image.set (x, y, color);
 	}
 }
 
