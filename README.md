@@ -17,5 +17,4 @@
    * [2.0](https://github.com/sT4R3K/tinyrenderer/tree/2.0) : Flat shading render (adding lighting).
 
 3. Hidden faces removal (z buffer)
-   * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) :
-   * [2.2](https://github.com/sT4R3K/tinyrenderer/tree/2.2) :
+   * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) : Y-Buffer (rendering a 2D scene on 1D screen).
