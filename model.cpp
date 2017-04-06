@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include "model.h"
 
-Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
+Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_() {
     std::ifstream in;
     in.open (filename, std::ifstream::in);
     if (in.fail()) return;
@@ -29,7 +29,8 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
             }
 
             std::vector<int> f;
-            int itrash, idx;
+            std::vector<int> f_vt;
+            int itrash, idx, vt;
             iss >> trash;
 
             facesFormat (line);
@@ -41,15 +42,19 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
                     }
                     break;
                 case 2: // f v/vt v/vt v/vt
-                    while (iss >> idx >> trash >> itrash) {
+                    while (iss >> idx >> trash >> vt) {
                         idx--;
                         f.push_back(idx);
+                        vt--;
+                        f_vt.push_back (vt);
                     }
                     break;
                 case 3: // f v/vt/vn v/vt/vn v/vt/vn
-                    while (iss >> idx >> trash >> itrash >> trash >> itrash) {
+                    while (iss >> idx >> trash >> vt >> trash >> itrash) {
                         idx--;
                         f.push_back(idx);
+                        vt--;
+                        f_vt.push_back (vt);
                     }
                     break;
                 case 4: // f v//vn v//vn v//vn
@@ -59,7 +64,16 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_() {
                     }
                     break;
             }
+            while (f_vt.size () > 0) {
+                f.push_back (f_vt.back ());
+                f_vt.pop_back ();
+            }
             faces_.push_back(f);
+        } else if (!line.compare(0, 3, "vt ")) {
+            iss >> trash >> trash;
+            Vec3f vt;
+            for (int i=0;i<3;i++) iss >> vt.raw[i];
+            vts_.push_back(vt);
         }
     }
 
@@ -81,12 +95,19 @@ int Model::nfaces() {
     return (int)faces_.size();
 }
 
+int Model::nvts () {
+    return (int) vts_.size ();
+}
 std::vector<int> Model::face(int idx) {
     return faces_[idx];
 }
 
 Vec3f Model::vert(int i) {
     return verts_[i];
+}
+
+Vec3f Model::vt (int idx) {
+    return vts_[idx];
 }
 
 void Model::minMaxXY () {

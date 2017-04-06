@@ -9,6 +9,7 @@ private:
 	int m_facesFormat;
 	std::vector<Vec3f> verts_;
 	std::vector<std::vector<int> > faces_;
+	std::vector<Vec3f> vts_;
 
 	float m_minX;
 	float m_maxX;
@@ -22,8 +23,10 @@ public:
 	~Model();
 	int nverts();
 	int nfaces();
+	int nvts();
 	Vec3f vert(int i);
 	std::vector<int> face(int idx);
+	Vec3f vt(int idx);
 
 	void minMaxXY ();
 	float minX ();
