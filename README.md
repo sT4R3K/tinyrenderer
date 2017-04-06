@@ -18,3 +18,7 @@
 
 3. Hidden faces removal (z buffer)
    * [2.1](https://github.com/sT4R3K/tinyrenderer/tree/2.1) : Y-Buffer (rendering a 2D scene on 1D screen).
+   * [2.2](https://github.com/sT4R3K/tinyrenderer/tree/2.2) : Z-Buffer (Back to 3D).
+   * [2.3](https://github.com/sT4R3K/tinyrenderer/tree/2.3) : Texture!
+   
+4. Perspective projection
