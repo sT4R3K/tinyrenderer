@@ -22,7 +22,7 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
             verts_.push_back(v);
         } else if (!line.compare(0, 2, "f ")) {
             // Check if the face is a triangle:
-            if (nSides (line) != 3) {
+            if (false /*nSides (line) != 3*/) {
                 std::cerr << "The object in \"" << filename << "\" contains at least a face that is not a triangle." << std::endl;
                 std::cerr << "Aborted!" << std::endl;
                 exit (0); // The dirty way XD
@@ -49,6 +49,8 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
                         f_vt.push_back (vt);
                     }
                     break;
+                case 5: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn
+                case 6: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn v/vt/vn
                 case 3: // f v/vt/vn v/vt/vn v/vt/vn
                     while (iss >> idx >> trash >> vt >> trash >> itrash) {
                         idx--;
@@ -175,6 +177,8 @@ int Model::nSides (std::string line) {
         2: f v/vt v/vt v/vt
         3: f v/vt/vn v/vt/vn v/vt/vn
         4: f v//vn v//vn v//vn
+        5: f v/vt/vn v/vt/vn v/vt/vn v/vt/vn
+        6: f v/vt/vn v/vt/vn v/vt/vn v/vt/vn v/vt/vn
 */
 void Model::facesFormat (std::string line) {
     // This function will be executed only one time during the lifetime of the object:
@@ -196,12 +200,17 @@ void Model::facesFormat (std::string line) {
             return;
         case 6:
             break;
+        case 8:
+            m_facesFormat = 5;
+            break;
+        case 10:
+            m_facesFormat = 6;
+            break;
         default:
             std::cerr << "Unknown faces representation!" << std::endl;
             exit (0); // No time for a fancy way >__<
     }
 
-    // If we get here, it means that we found six slashes '/'
     // We search for double slashes:
     if (line.find ("//") == std::string::npos)
         m_facesFormat = 3;

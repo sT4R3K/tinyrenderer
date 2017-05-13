@@ -19,9 +19,12 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
+const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
 const int width  = 4800;
 const int height = 4800;
+const int depth  = 255;
+
 float *zbuffer = new float[width * height];
 
 Model *model;
@@ -38,10 +41,11 @@ int main(int argc, char** argv) {
 	}else if (argc == 2) {
 		model = new Model (argv[1]);
 	} else {
-		model = new Model ("obj/african_head.obj");
+		model = new Model ("obj/cube.obj");
 	}
 
 	TGAImage image (width, height, TGAImage::RGB);
+	/*
 	Vec3f light_dir(0,0,-1);
 	for (int i=0; i<model->nfaces(); i++) { 
 		std::vector<int> face = model->face(i); 
@@ -68,6 +72,9 @@ int main(int argc, char** argv) {
 			}
 		} 
 	}
+	//*/
+
+	
 
 	image.flip_vertically();	
 	image.write_tga_file("output.tga");
