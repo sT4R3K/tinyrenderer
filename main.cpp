@@ -8,12 +8,28 @@
 #include "model.h"
 #include "geometry.h"
 
+#define PI 3.14159265
+
+using namespace std;
+
+Matrix v2m (Vec3f v);
+Vec3f m2v (Matrix m);
+vector<Vec3f> m2vs (Matrix m);
+Matrix vs2m (vector<Vec3f> vs);
+Matrix scale (float x_scale, float y_scale, float z_scale = 1.);
+Matrix shear_x (float shear);
+Matrix shear_y (float shear);
+Matrix rotate (float alpha);
+Matrix translate (float x_offset, float y_offset, float z_offset = 1.);
+Matrix viewport (int x_offset, int y_offset, int window_width, int window_height);
+
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
 Vec3f barycentric (Vec2f *pts, Vec3f P);
 TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity);
 void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity);
 void triangle (Vec2f *pts, TGAImage &image, TGAColor color);
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
+void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -21,16 +37,14 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 4800;
-const int height = 4800;
+const int width  = 800;
+const int height = 800;
 const int depth  = 255;
 
 float *zbuffer = new float[width * height];
 
 Model *model;
 TGAImage *texture = NULL;
-
-using namespace std;
 
 int main(int argc, char** argv) {
 	if (argc == 3) {
@@ -45,41 +59,114 @@ int main(int argc, char** argv) {
 	}
 
 	TGAImage image (width, height, TGAImage::RGB);
-	/*
-	Vec3f light_dir(0,0,-1);
-	for (int i=0; i<model->nfaces(); i++) { 
-		std::vector<int> face = model->face(i); 
-		Vec2f screen_coords[3]; 
-		Vec3f world_coords[3]; 
-		for (int j=0; j<3; j++) { 
-			Vec3f v = model->vert(face[j]); 
-			screen_coords[j] = Vec2f((v.x+1.)*width/2., (v.y+1.)*height/2.); 
-			world_coords[j]  = v; 
-		}
-		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
-		n.normalize(); 
-		float intensity = n*light_dir; 
-		if (intensity>0) {
-			if (texture == NULL)
-				triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-			else {
-				Vec2f texture_coords[3];
-				for (int i = 0; i < 3; i++) {
-					Vec3f v = model->vt(face[i+3]);
-					texture_coords [i] = Vec2f (v.x*texture->get_width(), v.y*texture->get_height());
-				}
-				textured_triangle (screen_coords, texture_coords, image, intensity); 
-			}
-		} 
-	}
-	//*/
-
 	
+	Matrix VP = viewport (width/5., height/5., 3*height/4., 3*width/5.);
+
+	// Drawing the axes:
+	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
+	vector<Vec3f> axes;
+	axes.push_back (o);
+	axes.push_back (x);
+	axes.push_back (y);
+	axes = m2vs (VP * vs2m(axes));
+	line (axes[0], axes[1], image, red);
+	line (axes[0], axes[2], image, green);
+
+	// Extracting the model into a matrix:
+	vector<int> face = model->face(0);
+	vector<Vec3f> face_verts;
+	for (unsigned int i = 0; i < face.size()/2; i ++) // (size/2) because the second half contains vt(s).
+		face_verts.push_back (model->vert(face[i]));	
+	Matrix face_matrix = vs2m (face_verts);
+
+	// Drawing the original model:
+	face_verts = m2vs (VP * face_matrix);
+	for (unsigned int i = 0; i<face_verts.size(); i++) {
+		Vec3f v0 = face_verts[i];
+		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
+		line (v0,v1, image, white);
+	}
+
+	// Drawing the deformed model:
+	face_verts = m2vs (VP * scale (3./2, 3./2, 1) * face_matrix);
+	for (unsigned int i = 0; i<face_verts.size(); i++) {
+		Vec3f v0 = face_verts[i];
+		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
+		line (v0,v1, image, yellow);
+	}
 
 	image.flip_vertically();	
 	image.write_tga_file("output.tga");
 	
 	return 0;
+}
+
+Matrix v2m (Vec3f v) {
+	Matrix m (4,1);
+	for (int i = 0; i<3; i++) m[i][0] = v[i];
+	m[3][0] = 1;
+	return m;
+}
+
+Vec3f m2v (Matrix m) {
+	return Vec3f (m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0]);
+}
+
+vector<Vec3f> m2vs (Matrix m) {
+	vector<Vec3f> vs;
+	for (int i = 0; i < m.ncols(); i++)
+		vs.push_back (Vec3f (m[0][i]/m[3][i], m[1][i]/m[3][i], m[2][i]/m[3][i]));
+	return vs;
+}
+
+Matrix vs2m (vector<Vec3f> vs) {
+	Matrix m (4, vs.size ());
+	for (unsigned int j = 0; j < vs.size (); j++) {
+		for (int i = 0; i<3; i++) m[i][j] = vs[j][i];
+		m[3][j] = 1;
+	}
+	return m;
+}
+
+Matrix scale (float x_scale, float y_scale, float z_scale) {
+	Matrix scale_matrix = Matrix::identity (4);
+	scale_matrix[0][0] = x_scale;
+	scale_matrix[1][1] = y_scale;
+	scale_matrix[2][2] = z_scale;
+	return scale_matrix;
+}
+
+Matrix shear_x (float shear) {
+	Matrix shear_matrix = Matrix::identity (4);
+	shear_matrix[0][1] = shear;
+	return shear_matrix;
+}
+
+Matrix shear_y (float shear) {
+	Matrix shear_matrix = Matrix::identity (4);
+	shear_matrix[1][0] = shear;
+	return shear_matrix;
+}
+
+Matrix rotate (float alpha) {
+	Matrix rotate_matrix = Matrix::identity (4);
+	rotate_matrix[0][0] = cos (alpha * PI / 180.0);
+	rotate_matrix[0][1] = -sin (alpha * PI / 180.0);
+	rotate_matrix[1][0] = sin (alpha * PI / 180.0);
+	rotate_matrix[1][1] = cos (alpha * PI / 180.0);
+	return rotate_matrix;
+}
+
+Matrix translate (float x_offset, float y_offset, float z_offset) {
+	Matrix translate_matrix = Matrix::identity (4);
+	translate_matrix[0][3] = x_offset;
+	translate_matrix[1][3] = y_offset;
+	translate_matrix[2][3] = z_offset;
+	return translate_matrix;
+}
+
+Matrix viewport (int x_offset, int y_offset, int window_width, int window_height) {
+	return translate (width/2., height/2., depth/2.) * scale (width/2-x_offset,height/2-y_offset, depth/2.);
 }
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer) {
@@ -164,7 +251,11 @@ void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
 		}
 }
 
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) {
+	line(Vec3i (p0.x, p0.y, 0), Vec3i (p1.x, p1.y, 0), image, color);
+}
+
+void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color) {
 	int Dx = p1.x - p0.x;
 	int Dy = p1.y - p0.y;
 

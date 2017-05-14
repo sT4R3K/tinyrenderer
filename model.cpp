@@ -80,8 +80,8 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
     }
 
     // Normaliser l'objet (coordonnées entre -1 et 1):
-    minMaxXY ();
-    normalize ();
+    //minMaxXY ();
+    //normalize ();
 
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }

@@ -12,6 +12,7 @@ template <class t> struct Vec2 {
     t& y;
     Vec2<t>() : raw(), x(raw[0]), y(raw[1]) { x = y = t(); }
     Vec2<t>(t _x, t _y) : raw(), x(raw[0]), y(raw[1]) { x=_x; y=_y; }
+    template <class u> Vec2<t>(const Vec2<u> &v);
     Vec2<t>(const Vec2<t> &v) : raw(), x(raw[0]), y(raw[1]) { *this = v; }
     Vec2<t> & operator =(const Vec2<t> &v) {
         if (this != &v) {
@@ -64,6 +65,9 @@ typedef Vec3<int>   Vec3i;
 template <> template <> Vec3<int>::Vec3(const Vec3<float> &v);
 template <> template <> Vec3<float>::Vec3(const Vec3<int> &v);
 
+template <> template <> Vec2<int>::Vec2(const Vec2<float> &v);
+template <> template <> Vec2<float>::Vec2(const Vec2<int> &v);
+
 template <class t> std::ostream& operator<<(std::ostream& s, Vec2<t>& v) {
 	s << "(" << v.x << ", " << v.y << ")\n";
 	return s;
@@ -83,8 +87,8 @@ class Matrix {
     int rows, cols;
 public:
     Matrix(int r=DEFAULT_ALLOC, int c=DEFAULT_ALLOC);
-    inline int nrows();
-    inline int ncols();
+    int nrows();
+    int ncols();
 
     static Matrix identity(int dimensions);
     std::vector<float>& operator[](const int i);

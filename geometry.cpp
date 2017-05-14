@@ -16,6 +16,16 @@ template <> template <> Vec3<float>::Vec3<>(const Vec3<int> &v) : raw(), x(raw[0
     z = v.z;
 }
 
+template <> template <> Vec2<int>::Vec2<>(const Vec2<float> &v) : raw(), x(raw[0]), y(raw[1]) {
+    x = int(floor(v.x)+.5);
+    y = int(floor(v.y)+.5);
+}
+
+template <> template <> Vec2<float>::Vec2<>(const Vec2<int> &v) : raw(), x(raw[0]), y(raw[1]) {
+    x = v.x;
+    y = v.y;
+}
+
 
 Matrix::Matrix(int r, int c) : m(std::vector<std::vector<float> >(r, std::vector<float>(c, 0.f))), rows(r), cols(c) { }
 
