@@ -20,15 +20,18 @@ Matrix scale (float x_scale, float y_scale, float z_scale = 1.);
 Matrix shear_x (float shear);
 Matrix shear_y (float shear);
 Matrix rotate (float alpha);
-Matrix translate (float x_offset, float y_offset, float z_offset = 1.);
+Matrix translate (float x_offset, float y_offset, float z_offset = 0.);
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height);
 Matrix project (float p);
+Matrix projection (float c);
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
-Vec3f barycentric (Vec2f *pts, Vec3f P);
+Vec3f barycentric (Vec3f *pts, Vec3f P);
 TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity);
-void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity);
-void triangle (Vec2f *pts, TGAImage &image, TGAColor color);
+void textured_triangle (vector<Vec3f>  pts, Vec2f *texture_pts, TGAImage &image, float intensity);
+void textured_triangle (Vec3f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity);
+void triangle (vector<Vec3f> pts, TGAImage &image, TGAColor color);
+void triangle (Vec3f *pts, TGAImage &image, TGAColor color);
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color);
 
@@ -38,11 +41,14 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 1500;
-const int height = 600;
+const int width  = 4800;
+const int height = 4800;
 const int depth  = 255;
 
 float *zbuffer = new float[width * height];
+
+Vec3f light_dir(0,0,-1);
+Vec3f camera(0,0,3);
 
 Model *model;
 TGAImage *texture = NULL;
@@ -56,53 +62,39 @@ int main(int argc, char** argv) {
 	}else if (argc == 2) {
 		model = new Model (argv[1]);
 	} else {
-		model = new Model ("obj/cube.obj");
+		model = new Model ("obj/african_head.obj");
 	}
 
 	TGAImage image (width, height, TGAImage::RGB);
 	
-	Matrix VP = viewport (height/8., height/8., 3*height/4., 3*height/4.);
+	Matrix VP = viewport (width/8., height/8., 3*width/4., 3*height/4.);
 
-	// Drawing the axes:
-	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
-	vector<Vec3f> axes;
-	axes.push_back (o);
-	axes.push_back (x);
-	axes.push_back (y);
-	axes = m2vs (VP * vs2m(axes));
-	line (axes[0], axes[1], image, red);
-	line (axes[0], axes[2], image, green);
+	for (int i=0; i<model->nfaces(); i++) { 
+		vector<int> face = model->face(i); 
+		vector<Vec3f> screen_coords; 
+		vector<Vec3f> world_coords; 
+		for (unsigned int j=0; j<face.size()/2; j++) // (size/2) because the second half contains vt(s).
+			world_coords.push_back (model->vert(face[j])); 
+		
+		screen_coords = m2vs (VP * projection (camera.z) * vs2m (world_coords)); 
 
-	// Extracting the model into a matrix:
-	vector<int> face = model->face(0);
-	vector<Vec3f> face_verts;
-	for (unsigned int i = 0; i < face.size()/2; i ++) // (size/2) because the second half contains vt(s).
-		face_verts.push_back (model->vert(face[i]));	
-	Matrix face_matrix = vs2m (face_verts);
 
-	// Drawing the original model:
-	face_verts = m2vs (VP * face_matrix);
-	for (unsigned int i = 0; i<face_verts.size(); i++) {
-		Vec3f v0 = face_verts[i];
-		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
-		line (v0,v1, image, white);
-	}
+		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
+		n.normalize(); 
+		float intensity = n*light_dir;
 
-	line (m2v(VP*v2m(Vec3f(0,2,0))), m2v(VP*v2m(Vec3f(0,-2,0))), image, white);
-
-	// Drawind the yellow lines
-	Vec3f v0 = m2v (VP * v2m (Vec3f(5,0,0)));
-	for (unsigned int i = 0; i<face_verts.size(); i++) {
-		Vec3f v1 = face_verts[i];
-		line (v0,v1, image, yellow);
-	}
-
-	// Drawing the deformed model:
-	face_verts = m2vs (VP * project (-1./5) * face_matrix);
-	for (unsigned int i = 0; i<face_verts.size(); i++) {
-		Vec3f v0 = face_verts[i];
-		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
-		line (v0,v1, image, red);
+		if (intensity>0) {
+			if (texture == NULL)
+				triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+			else {
+				Vec2f texture_coords[3];
+				for (unsigned int k = 0; k < face.size()/2; k++) {
+					Vec3f v = model->vt(face[k+(face.size()/2)]);
+					texture_coords [k] = Vec2f (v.x*texture->get_width(), v.y*texture->get_height());
+				}
+				textured_triangle (screen_coords, texture_coords, image, intensity); 
+			}
+		} 
 	}
 
 	image.flip_vertically();	
@@ -185,6 +177,12 @@ Matrix project (float p) {
 	return project_matrix;
 }
 
+Matrix projection (float c) {
+	Matrix project_matrix = Matrix::identity (4);
+	project_matrix[3][2] = -1./c;
+	return project_matrix;
+}
+
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer) {
 	if (p0.x > p1.x)
 		swap (p0, p1);
@@ -201,8 +199,8 @@ void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffe
 	}
 }
 
-Vec3f barycentric (Vec2f *pts, Vec3f P) { 	// TODO: degenerate triangles.
-	Vec2f A = pts[0], B = pts[1], C = pts[2];
+Vec3f barycentric (Vec3f *pts, Vec3f P) { 	// TODO: degenerate triangles.
+	Vec3f A = pts[0], B = pts[1], C = pts[2];
 
 	float D = (A.x-C.x)*(B.y-C.y) - (B.x-C.x)*(A.y-C.y);
 
@@ -221,7 +219,14 @@ TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity) {
 	return color;
 }
 
-void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity) {
+void textured_triangle (vector<Vec3f>  pts, Vec2f *texture_pts, TGAImage &image, float intensity) {
+	Vec3f points[3];
+	for (int i = 0; i < 3; ++i)
+		points[i] = pts.at (i);
+	textured_triangle (points, texture_pts, image, intensity);
+}
+
+void textured_triangle (Vec3f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity) {
 	Vec2f min_max [2]; // [(min_x, min_y), (max_x, max_y)]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
@@ -230,8 +235,8 @@ void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float 
 	Vec2f bboxmax (min ((float) (image.get_width()-1), min_max[1][0]), min ((float) (image.get_height()-1), min_max[1][1]));
 
 	Vec3f P;
-	for (P.x = (int) bboxmin.x; P.x < bboxmax.x; P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
-		for (P.y = (int) bboxmin.y; P.y < bboxmax.y; P.y++) {
+	for (P.x =  roundf(bboxmin.x); P.x <= roundf(bboxmax.x); P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
+		for (P.y =  roundf(bboxmin.y); P.y <= roundf(bboxmax.y); P.y++) {
 			Vec3f bc_P = barycentric (pts, P);
 			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0) {
 				P.z = 0;
@@ -244,7 +249,14 @@ void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float 
 		}
 }
 
-void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
+void triangle (vector<Vec3f> pts, TGAImage &image, TGAColor color) {
+	Vec3f points[3];
+	for (int i = 0; i < 3; ++i)
+		points[i] = pts.at (i);
+	triangle (points, image, color);
+}
+
+void triangle (Vec3f  *pts, TGAImage &image, TGAColor color) {
 	Vec2f min_max [2]; // [(min_x, min_y), (max_x, max_y)]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
@@ -253,8 +265,10 @@ void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
 	Vec2f bboxmax (min ((float) (image.get_width()-1), min_max[1][0]), min ((float) (image.get_height()-1), min_max[1][1]));
 
 	Vec3f P;
-	for (P.x = (int) bboxmin.x; P.x < bboxmax.x; P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
-		for (P.y = (int) bboxmin.y; P.y < bboxmax.y; P.y++) {
+	//cout << bboxmin.x << " " << bboxmin.y << endl;
+	//(bboxmin.x)
+	for (P.x =  roundf(bboxmin.x); P.x <= roundf(bboxmax.x); P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
+		for (P.y = roundf(bboxmin.y); P.y <= roundf(bboxmax.y); P.y++) {
 			Vec3f bc_P = barycentric (pts, P);
 			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0) {
 				P.z = 0;

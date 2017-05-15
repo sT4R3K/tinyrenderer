@@ -50,7 +50,9 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
                     }
                     break;
                 case 5: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn
+                    std::cout << "5" << std::endl;
                 case 6: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn v/vt/vn
+                    std::cout << "6" << std::endl;
                 case 3: // f v/vt/vn v/vt/vn v/vt/vn
                     while (iss >> idx >> trash >> vt >> trash >> itrash) {
                         idx--;
