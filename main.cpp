@@ -12,6 +12,8 @@
 
 using namespace std;
 
+Matrix lookat(Vec3f eye, Vec3f center, Vec3f up);
+
 Matrix v2m (Vec3f v);
 Vec3f m2v (Matrix m);
 vector<Vec3f> m2vs (Matrix m);
@@ -41,14 +43,17 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 4800;
-const int height = 4800;
+const int width  = 1600;
+const int height = 1600;
 const int depth  = 255;
 
 float *zbuffer = new float[width * height];
 
-Vec3f light_dir(0,0,-1);
-Vec3f camera(0,0,3);
+Vec3f light_dir (-1,0,-1);
+Vec3f camera (0,0,3);
+Vec3f eye (2,3,3);
+Vec3f center (0,0,0);
+Vec3f up (0,1,0);
 
 Model *model;
 TGAImage *texture = NULL;
@@ -66,8 +71,9 @@ int main(int argc, char** argv) {
 	}
 
 	TGAImage image (width, height, TGAImage::RGB);
-	
-	Matrix VP = viewport (width/8., height/8., 3*width/4., 3*height/4.);
+
+	Matrix ModelView = 	lookat (eye, center, up);
+	Matrix VP = viewport (width/9., height/9., 7*width/9., 7*height/9.);
 
 	for (int i=0; i<model->nfaces(); i++) { 
 		vector<int> face = model->face(i); 
@@ -76,8 +82,7 @@ int main(int argc, char** argv) {
 		for (unsigned int j=0; j<face.size()/2; j++) // (size/2) because the second half contains vt(s).
 			world_coords.push_back (model->vert(face[j])); 
 		
-		screen_coords = m2vs (VP * projection (camera.z) * vs2m (world_coords)); 
-
+		screen_coords = m2vs (VP * projection (camera.z) * ModelView * vs2m (world_coords));
 
 		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
 		n.normalize(); 
@@ -101,6 +106,21 @@ int main(int argc, char** argv) {
 	image.write_tga_file("output.tga");
 	
 	return 0;
+}
+
+Matrix lookat(Vec3f eye, Vec3f center, Vec3f up) {
+    Vec3f z = (eye-center).normalize();
+    Vec3f x = cross(up,z).normalize();
+    Vec3f y = cross(z,x).normalize();
+    Matrix Minv = Matrix::identity(4);
+    Matrix Tr   = Matrix::identity(4);
+    for (int i=0; i<3; i++) {
+        Minv[0][i] = x[i];
+        Minv[1][i] = y[i];
+        Minv[2][i] = z[i];
+        Tr[i][3] = -center[i];
+    }
+    return Minv*Tr;
 }
 
 Matrix v2m (Vec3f v) {
