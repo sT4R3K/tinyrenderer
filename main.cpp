@@ -38,8 +38,8 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 1760;
-const int height = 800;
+const int width  = 1500;
+const int height = 600;
 const int depth  = 255;
 
 float *zbuffer = new float[width * height];
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 	TGAImage image (width, height, TGAImage::RGB);
 	
-	Matrix VP = viewport (height/5., height/5., 3*height/5., 3*height/5.);
+	Matrix VP = viewport (height/8., height/8., 3*height/4., 3*height/4.);
 
 	// Drawing the axes:
 	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
@@ -87,6 +87,8 @@ int main(int argc, char** argv) {
 		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
 		line (v0,v1, image, white);
 	}
+
+	line (m2v(VP*v2m(Vec3f(0,2,0))), m2v(VP*v2m(Vec3f(0,-2,0))), image, white);
 
 	// Drawind the yellow lines
 	Vec3f v0 = m2v (VP * v2m (Vec3f(5,0,0)));
