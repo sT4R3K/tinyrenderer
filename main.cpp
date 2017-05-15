@@ -38,7 +38,7 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 800;
+const int width  = 1760;
 const int height = 800;
 const int depth  = 255;
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 	TGAImage image (width, height, TGAImage::RGB);
 	
-	Matrix VP = viewport (width/5., height/5., 3*width/4., 3*height/5.);
+	Matrix VP = viewport (height/5., height/5., 3*height/5., 3*height/5.);
 
 	// Drawing the axes:
 	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
@@ -174,7 +174,7 @@ Matrix translate (float x_offset, float y_offset, float z_offset) {
 }
 
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height) {
-	return translate (window_width/2., window_height/2., depth/2.) * scale (window_width/2-x_offset,window_height/2-y_offset, depth/2.);
+	return translate (window_width/2+x_offset,window_height/2+y_offset, depth/2.) * scale (window_width/2., window_height/2., depth/2.);
 }
 
 Matrix project (float p) {
