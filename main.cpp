@@ -22,6 +22,7 @@ Matrix shear_y (float shear);
 Matrix rotate (float alpha);
 Matrix translate (float x_offset, float y_offset, float z_offset = 1.);
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height);
+Matrix project (float p);
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
 Vec3f barycentric (Vec2f *pts, Vec3f P);
@@ -60,7 +61,7 @@ int main(int argc, char** argv) {
 
 	TGAImage image (width, height, TGAImage::RGB);
 	
-	Matrix VP = viewport (width/5., height/5., 3*height/4., 3*width/5.);
+	Matrix VP = viewport (width/5., height/5., 3*width/4., 3*height/5.);
 
 	// Drawing the axes:
 	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
@@ -87,12 +88,19 @@ int main(int argc, char** argv) {
 		line (v0,v1, image, white);
 	}
 
+	// Drawind the yellow lines
+	Vec3f v0 = m2v (VP * v2m (Vec3f(5,0,0)));
+	for (unsigned int i = 0; i<face_verts.size(); i++) {
+		Vec3f v1 = face_verts[i];
+		line (v0,v1, image, yellow);
+	}
+
 	// Drawing the deformed model:
-	face_verts = m2vs (VP * scale (3./2, 3./2, 1) * face_matrix);
+	face_verts = m2vs (VP * project (-1./5) * face_matrix);
 	for (unsigned int i = 0; i<face_verts.size(); i++) {
 		Vec3f v0 = face_verts[i];
 		Vec3f v1 = face_verts[(i+1)%face_verts.size()];
-		line (v0,v1, image, yellow);
+		line (v0,v1, image, red);
 	}
 
 	image.flip_vertically();	
@@ -166,7 +174,13 @@ Matrix translate (float x_offset, float y_offset, float z_offset) {
 }
 
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height) {
-	return translate (width/2., height/2., depth/2.) * scale (width/2-x_offset,height/2-y_offset, depth/2.);
+	return translate (window_width/2., window_height/2., depth/2.) * scale (window_width/2-x_offset,window_height/2-y_offset, depth/2.);
+}
+
+Matrix project (float p) {
+	Matrix project_matrix = Matrix::identity (4);
+	project_matrix[3][0] = p;
+	return project_matrix;
 }
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer) {
