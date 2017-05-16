@@ -51,7 +51,7 @@ float *zbuffer = new float[width * height];
 
 Vec3f light_dir (-1,0,-1);
 Vec3f camera (0,0,3);
-Vec3f eye (2,-3,3);
+Vec3f eye (2,1,0);
 Vec3f center (0,0,0);
 Vec3f up (0,1,0);
 
