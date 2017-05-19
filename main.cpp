@@ -86,7 +86,7 @@ void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 			min_max[i][j] =  (i==0)? fmin (pts[0][j], fmin (pts[1][j], pts[2][j])) : fmax (pts[0][j], fmax (pts[1][j], pts[2][j]));
-	Vec2f bboxmin (fmax (0, min_max[0][0]), fmax (0, min_max[0][1]));
+	Vec2f bboxmin (fmax (0.f, min_max[0][0]), fmax (0.f, min_max[0][1]));
 	Vec2f bboxmax (fmin (float(image.get_width()-1), min_max[1][0]), fmin (float(image.get_height()-1), min_max[1][1]));
 
 	Vec2f P;
