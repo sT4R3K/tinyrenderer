@@ -9,8 +9,8 @@
 #include "geometry.h"
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
-Vec3f barycentric (Vec2f *pts, Vec3f P);
-void triangle (Vec2f *pts, TGAImage &image, TGAColor color);
+Vec3f barycentric (Vec3f *pts, Vec3f P);
+void triangle (Vec3f *pts, TGAImage &image, TGAColor color, float *zbuffer);
 void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -20,7 +20,6 @@ const TGAColor blue = TGAColor(0,   0, 255,   255);
 
 const int width  = 4800;
 const int height = 4800;
-float *zbuffer = new float[width * height];
 
 Model *model;
 
@@ -33,22 +32,26 @@ int main(int argc, char** argv) {
 		model = new Model ("obj/african_head.obj");
 	}
 
+	float *zbuffer = new float[width * height];
+	for (int i = 0; i < width * height; i++)
+		zbuffer[i] = -numeric_limits<float>::infinity();
+
 	TGAImage image (width, height, TGAImage::RGB);
-	Vec3f light_dir(0,0,-1);
+	Vec3f light_dir(-1,0,0);
 	for (int i=0; i<model->nfaces(); i++) { 
 		std::vector<int> face = model->face(i); 
-		Vec2f screen_coords[3]; 
+		Vec3f screen_coords[3]; 
 		Vec3f world_coords[3]; 
 		for (int j=0; j<3; j++) { 
 			Vec3f v = model->vert(face[j]); 
-			screen_coords[j] = Vec2f((v.x+1.)*width/2., (v.y+1.)*height/2.); 
+			screen_coords[j] = Vec3f((v.x+1.)*width/2., (v.y+1.)*height/2., v.z); 
 			world_coords[j]  = v; 
 		} 
 		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
 		n.normalize(); 
-		float intensity = n*light_dir; 
+		float intensity = n*light_dir;
 		if (intensity>0) { 
-			triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255)); 
+			triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer); 
 		} 
 	}
 
@@ -74,10 +77,11 @@ void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffe
 	}
 }
 
-Vec3f barycentric (Vec2f *pts, Vec3f P) { 	// TODO: degenerate triangles.
-	Vec2f A = pts[0], B = pts[1], C = pts[2];
+Vec3f barycentric (Vec3f *pts, Vec3f P) {
+	Vec3f A = pts[0], B = pts[1], C = pts[2];
 
 	float D = (A.x-C.x)*(B.y-C.y) - (B.x-C.x)*(A.y-C.y);
+	if (D == 0) return Vec3f (-1,-1,-1); // Getting rid of degenerate triangles.
 
 	float alpha = ((B.y-C.y)*(P.x-C.x) + (C.x-B.x)*(P.y-C.y)) / D;
 	float beta = ((C.y-A.y)*(P.x-C.x) + (A.x-C.x)*(P.y-C.y)) / D;
@@ -85,23 +89,23 @@ Vec3f barycentric (Vec2f *pts, Vec3f P) { 	// TODO: degenerate triangles.
 	return Vec3f (alpha, beta, (1. - alpha - beta));
 }
 
-void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
-	Vec2f min_max [2]; // [(min_x, min_y), (max_x, max_y)]
+void triangle (Vec3f  *pts, TGAImage &image, TGAColor color, float *zbuffer) {
+	Vec2f min_max [2]; // [min_x, min_y, max_x, max_y]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
-			min_max[i][j] =  (i==0)? min (pts[0][j], min (pts[1][j], pts[2][j])) : max (pts[0][j], max (pts[1][j], pts[2][j]));
-	Vec2f bboxmin (max (float(0), min_max[0][0]), max (float(0), min_max[0][1]));
-	Vec2f bboxmax (min ((float) (image.get_width()-1), min_max[1][0]), min ((float) (image.get_height()-1), min_max[1][1]));
+			min_max[i][j] =  (i==0)? fmin (pts[0][j], fmin (pts[1][j], pts[2][j])) : fmax (pts[0][j], fmax (pts[1][j], pts[2][j]));
+	Vec2f bboxmin (fmax (0.f, min_max[0][0]), fmax (0.f, min_max[0][1]));
+	Vec2f bboxmax (fmin (float(image.get_width()-1), min_max[1][0]), fmin (float(image.get_height()-1), min_max[1][1]));
 
 	Vec3f P;
-	for (P.x = (int) bboxmin.x; P.x < bboxmax.x; P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
-		for (P.y = (int) bboxmin.y; P.y < bboxmax.y; P.y++) {
+	for (P.x = roundf (bboxmin.x); P.x <= roundf (bboxmax.x); P.x++)
+		for (P.y = roundf (bboxmin.y); P.y <= roundf (bboxmax.y); P.y++) {
 			Vec3f bc_P = barycentric (pts, P);
 			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0) {
 				P.z = 0;
-				for (int i=0; i<3; i++) P.z += pts[i][2]*bc_P[i];
-            	if (zbuffer[int(P.x+P.y*width)]<P.z) {
-                	zbuffer[int(P.x+P.y*width)] = P.z;
+				for (int i=0; i<3; i++) P.z += pts[i].z*bc_P[i];
+				if (zbuffer[int(P.x+P.y*width)] < P.z) {
+					zbuffer[int(P.x+P.y*width)] = P.z;
 					image.set (P.x, P.y, color);
 				}
 			}
