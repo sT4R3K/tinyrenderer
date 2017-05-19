@@ -35,8 +35,8 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 800;
-const int height = 800;
+const int width  = 160;
+const int height = 160;
 const int depth  = 255;
 
 Model *model;
@@ -66,7 +66,6 @@ int main(int argc, char** argv) {
 	// Extracting the model vertices into a matrix:
 	vector<Vec3i> face = model->face(0);
 	vector<Vec3f> face_verts;
-	cout << face.size() << endl;
 	for (unsigned int i = 0; i < face.size(); i ++)
 		face_verts.push_back (model->vert(face[i][0]));	
 	Matrix face_matrix = vs2m (face_verts);
