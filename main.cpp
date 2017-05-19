@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 		zbuffer[i] = -numeric_limits<float>::infinity();
 
 	TGAImage image (width, height, TGAImage::RGB);
-	Vec3f light_dir(-1,0,0);
+	Vec3f light_dir(0,0,-1);
 	for (int i=0; i<model->nfaces(); i++) { 
 		std::vector<int> face = model->face(i); 
 		Vec3f screen_coords[3]; 
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 			world_coords[j]  = v; 
 		} 
 		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
-		n.normalize(); 
+		n.normalize();
 		float intensity = n*light_dir;
 		if (intensity>0) { 
 			triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer); 
