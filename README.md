@@ -22,3 +22,8 @@
    * [3.0](https://github.com/sT4R3K/tinyrenderer/tree/3.0) : Texture!
    
 4. Perspective projection
+   * [3.1](https://github.com/sT4R3K/tinyrenderer/tree/3.1) : Linear transformations (scaling, shearing, rotation) + Homogeneous coordinates (translation).
+   * [3.2](https://github.com/sT4R3K/tinyrenderer/tree/3.2) : Central projection!
+   * [4.0](https://github.com/sT4R3K/tinyrenderer/tree/4.0) : Drawing in perspective (Back to 3D).
+
+5. Moving the camera   
