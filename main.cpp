@@ -24,12 +24,10 @@ Matrix translate (float x_offset, float y_offset, float z_offset = 1.);
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height);
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
-Vec3f barycentric (Vec2f *pts, Vec3f P);
-TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity);
-void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity);
-void triangle (Vec2f *pts, TGAImage &image, TGAColor color);
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
+Vec3f barycentric (Vec3f *pts, Vec3f P);
+void triangle (Vec3f *pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords = NULL);
 void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color);
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -41,17 +39,11 @@ const int width  = 800;
 const int height = 800;
 const int depth  = 255;
 
-float *zbuffer = new float[width * height];
-
 Model *model;
-TGAImage *texture = NULL;
 
 int main(int argc, char** argv) {
 	if (argc == 3) {
-		model = new Model (argv[1]);
-		texture = new TGAImage ();
-		texture->read_tga_file (argv[2]);
-		texture->flip_vertically ();
+		model = new Model (argv[1], argv[2]);
 	}else if (argc == 2) {
 		model = new Model (argv[1]);
 	} else {
@@ -60,7 +52,7 @@ int main(int argc, char** argv) {
 
 	TGAImage image (width, height, TGAImage::RGB);
 	
-	Matrix VP = viewport (width/5., height/5., 3*height/4., 3*width/5.);
+	Matrix VP = viewport (width/5., height/5., 3*height/5., 3*width/5.);
 
 	// Drawing the axes:
 	Vec3f o(0,0,0), x(1,0,0), y(0,1,0);
@@ -71,12 +63,12 @@ int main(int argc, char** argv) {
 	axes = m2vs (VP * vs2m(axes));
 	line (axes[0], axes[1], image, red);
 	line (axes[0], axes[2], image, green);
-
-	// Extracting the model into a matrix:
-	vector<int> face = model->face(0);
+	// Extracting the model vertices into a matrix:
+	vector<Vec3i> face = model->face(0);
 	vector<Vec3f> face_verts;
-	for (unsigned int i = 0; i < face.size()/2; i ++) // (size/2) because the second half contains vt(s).
-		face_verts.push_back (model->vert(face[i]));	
+	cout << face.size() << endl;
+	for (unsigned int i = 0; i < face.size(); i ++)
+		face_verts.push_back (model->vert(face[i][0]));	
 	Matrix face_matrix = vs2m (face_verts);
 
 	// Drawing the original model:
@@ -166,7 +158,7 @@ Matrix translate (float x_offset, float y_offset, float z_offset) {
 }
 
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height) {
-	return translate (width/2., height/2., depth/2.) * scale (width/2-x_offset,height/2-y_offset, depth/2.);
+	return translate (window_width/2+x_offset,window_height/2+y_offset, depth/2.) * scale (window_width/2., window_height/2., depth/2.);
 }
 
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer) {
@@ -185,10 +177,11 @@ void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffe
 	}
 }
 
-Vec3f barycentric (Vec2f *pts, Vec3f P) { 	// TODO: degenerate triangles.
-	Vec2f A = pts[0], B = pts[1], C = pts[2];
+Vec3f barycentric (Vec3f *pts, Vec3f P) {
+	Vec3f A = pts[0], B = pts[1], C = pts[2];
 
 	float D = (A.x-C.x)*(B.y-C.y) - (B.x-C.x)*(A.y-C.y);
+	if (D == 0) return Vec3f (-1,-1,-1); // Getting rid of degenerate triangles.
 
 	float alpha = ((B.y-C.y)*(P.x-C.x) + (C.x-B.x)*(P.y-C.y)) / D;
 	float beta = ((C.y-A.y)*(P.x-C.x) + (A.x-C.x)*(P.y-C.y)) / D;
@@ -196,66 +189,37 @@ Vec3f barycentric (Vec2f *pts, Vec3f P) { 	// TODO: degenerate triangles.
 	return Vec3f (alpha, beta, (1. - alpha - beta));
 }
 
-TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity) {
-	Vec2f T;
-	for (int i=0; i<3; i++) T.x += texture_pts[i][0]*P[2-i];
-	for (int i=0; i<3; i++) T.y += texture_pts[i][1]*P[2-i];
-	TGAColor color = texture->get ((int ) T.x, (int) T.y);
-	for (int i=0; i<3; i++) color[i] = color[i] * intensity;
-	return color;
-}
 
-void textured_triangle (Vec2f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity) {
-	Vec2f min_max [2]; // [(min_x, min_y), (max_x, max_y)]
+void triangle (Vec3f  *pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords) {
+	Vec2f min_max [2]; // [min_x, min_y, max_x, max_y]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
-			min_max[i][j] =  (i==0)? min (pts[0][j], min (pts[1][j], pts[2][j])) : max (pts[0][j], max (pts[1][j], pts[2][j]));
-	Vec2f bboxmin (max (float(0), min_max[0][0]), max (float(0), min_max[0][1]));
-	Vec2f bboxmax (min ((float) (image.get_width()-1), min_max[1][0]), min ((float) (image.get_height()-1), min_max[1][1]));
+			min_max[i][j] =  (i==0)? fmin (pts[0][j], fmin (pts[1][j], pts[2][j])) : fmax (pts[0][j], fmax (pts[1][j], pts[2][j]));
+	Vec2f bboxmin (fmax (0.f, min_max[0][0]), fmax (0.f, min_max[0][1]));
+	Vec2f bboxmax (fmin (float(image.get_width()-1), min_max[1][0]), fmin (float(image.get_height()-1), min_max[1][1]));
 
 	Vec3f P;
-	for (P.x = (int) bboxmin.x; P.x < bboxmax.x; P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
-		for (P.y = (int) bboxmin.y; P.y < bboxmax.y; P.y++) {
+	for (P.x = roundf (bboxmin.x); P.x <= roundf (bboxmax.x); P.x++)
+		for (P.y = roundf (bboxmin.y); P.y <= roundf (bboxmax.y); P.y++) {
 			Vec3f bc_P = barycentric (pts, P);
 			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0) {
 				P.z = 0;
-				for (int i=0; i<3; i++) P.z += pts[i][2]*bc_P[i];
-            	if (zbuffer[int(P.x+P.y*width)]<P.z) {
-                	zbuffer[int(P.x+P.y*width)] = P.z;
-					image.set (P.x, P.y, getTextureColor (texture_pts, bc_P, intensity));
-				}
-			}
-		}
-}
-
-void triangle (Vec2f  *pts, TGAImage &image, TGAColor color) {
-	Vec2f min_max [2]; // [(min_x, min_y), (max_x, max_y)]
-	for (int i = 0; i < 2; i++)
-		for (int j = 0; j < 2; j++)
-			min_max[i][j] =  (i==0)? min (pts[0][j], min (pts[1][j], pts[2][j])) : max (pts[0][j], max (pts[1][j], pts[2][j]));
-	Vec2f bboxmin (max (float(0), min_max[0][0]), max (float(0), min_max[0][1]));
-	Vec2f bboxmax (min ((float) (image.get_width()-1), min_max[1][0]), min ((float) (image.get_height()-1), min_max[1][1]));
-
-	Vec3f P;
-	for (P.x = (int) bboxmin.x; P.x < bboxmax.x; P.x++) // Initializing P.x and P.y to floating numbers creates holes between triangles.
-		for (P.y = (int) bboxmin.y; P.y < bboxmax.y; P.y++) {
-			Vec3f bc_P = barycentric (pts, P);
-			if (bc_P.x >= 0 &&  bc_P.y >= 0 && bc_P.z >= 0) {
-				P.z = 0;
-				for (int i=0; i<3; i++) P.z += pts[i][2]*bc_P[i];
-            	if (zbuffer[int(P.x+P.y*width)]<P.z) {
-                	zbuffer[int(P.x+P.y*width)] = P.z;
+				for (int i=0; i<3; i++) P.z += pts[i].z*bc_P[i];
+				if (zbuffer[int(P.x+P.y*width)] < P.z) {
+					zbuffer[int(P.x+P.y*width)] = P.z;
+					TGAColor color = (texture_coords == NULL)? TGAColor(255, 255, 255, 255) : model->getTextureColor (texture_coords, bc_P);
+					for (int i=0; i<3; i++) color[i] = color[i] * intensity;
 					image.set (P.x, P.y, color);
 				}
 			}
 		}
 }
 
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) {
-	line(Vec3i (p0.x, p0.y, 0), Vec3i (p1.x, p1.y, 0), image, color);
+void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color) {
+	line(Vec2i (p0.x, p0.y), Vec2i (p1.x, p1.y), image, color);
 }
 
-void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color) {
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) { 
 	int Dx = p1.x - p0.x;
 	int Dy = p1.y - p0.y;
 
