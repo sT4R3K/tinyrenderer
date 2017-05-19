@@ -6,9 +6,23 @@
 #include <cstdlib>
 #include "model.h"
 
-Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_() {
+Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_() {
+    model_filename_ = filename;
+    texture_filename_ = NULL;
+    texture_ = NULL;
+    Init ();
+}
+
+Model::Model(const char *model_filename, const char *texture_filename) : facesFormat_(0), verts_(), faces_(), vts_() {
+    model_filename_ = model_filename;
+    texture_filename_ = texture_filename;
+    Init ();
+    loadTexture ();
+}
+
+void Model::Init () {
     std::ifstream in;
-    in.open (filename, std::ifstream::in);
+    in.open (model_filename_, std::ifstream::in);
     if (in.fail()) return;
     std::string line;
     while (!in.eof()) {
@@ -23,52 +37,46 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
         } else if (!line.compare(0, 2, "f ")) {
             // Check if the face is a triangle:
             if (nSides (line) != 3) {
-                std::cerr << "The object in \"" << filename << "\" contains at least a face that is not a triangle." << std::endl;
+                std::cerr << "The object in \"" << model_filename_ << "\" contains at least a face that is not a triangle." << std::endl;
                 std::cerr << "Aborted!" << std::endl;
                 exit (0); // The dirty way XD
             }
 
-            std::vector<int> f;
-            std::vector<int> f_vt;
+            std::vector<Vec3i> f;
+            //std::vector<int> f_vt;
             int itrash, idx, vt;
             iss >> trash;
 
             facesFormat (line);
-            switch (m_facesFormat) {
+            switch (facesFormat_) {
                 case 1: // f v v v
                     while (iss >> idx) {
                         idx--; // in wavefront obj all indices start at 1, not zero
-                        f.push_back(idx);
+                        f.push_back(Vec3i (idx, 0, 0));
                     }
                     break;
                 case 2: // f v/vt v/vt v/vt
                     while (iss >> idx >> trash >> vt) {
                         idx--;
-                        f.push_back(idx);
                         vt--;
-                        f_vt.push_back (vt);
+                        f.push_back(Vec3i (idx, vt, 0));
                     }
                     break;
                 case 3: // f v/vt/vn v/vt/vn v/vt/vn
                     while (iss >> idx >> trash >> vt >> trash >> itrash) {
                         idx--;
-                        f.push_back(idx);
                         vt--;
-                        f_vt.push_back (vt);
+                        f.push_back(Vec3i (idx, vt, 0));
                     }
                     break;
                 case 4: // f v//vn v//vn v//vn
                     while (iss >> idx >> trash >> trash >> itrash) {
                         idx--;
-                        f.push_back(idx);
+                        f.push_back(Vec3i (idx, 0, 0));
                     }
                     break;
             }
-            while (f_vt.size () > 0) {
-                f.push_back (f_vt.back ());
-                f_vt.pop_back ();
-            }
-            faces_.push_back(f);
+            faces_.push_back (f);
         } else if (!line.compare(0, 3, "vt ")) {
             iss >> trash >> trash;
             Vec3f vt;
@@ -84,25 +92,43 @@ Model::Model(const char *filename) : m_facesFormat(0), verts_(), faces_(), vts_(
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }
 
-Model::~Model() {
+Model::~Model () {
 }
 
-int Model::nverts() {
+void Model::loadTexture () {
+    texture_ = new TGAImage ();
+    texture_->read_tga_file (texture_filename_);
+    texture_->flip_vertically ();
+}
+
+TGAColor Model::getTextureColor (Vec3f *texture_coords, Vec3f P) {
+    Vec2f T; // Interpolated P inside the triangle *texture_coords.
+    for (int i=0; i<3; i++) T.x += texture_coords[i][0]*P[i];
+    for (int i=0; i<3; i++) T.y += texture_coords[i][1]*P[i];
+
+    return texture_->get (roundf(T.x * texture_->get_width ()), roundf(T.y * texture_->get_height ()));
+}
+
+bool Model::has_texture () {
+    return (texture_ != NULL);
+}
+
+int Model::nverts () {
     return (int)verts_.size();
 }
 
-int Model::nfaces() {
+int Model::nfaces () {
     return (int)faces_.size();
 }
 
 int Model::nvts () {
     return (int) vts_.size ();
 }
-std::vector<int> Model::face(int idx) {
+std::vector<Vec3i> Model::face (int idx) {
     return faces_[idx];
 }
 
-Vec3f Model::vert(int i) {
+Vec3f Model::vert (int i) {
     return verts_[i];
 }
 
@@ -178,7 +204,7 @@ int Model::nSides (std::string line) {
 */
 void Model::facesFormat (std::string line) {
     // This function will be executed only one time during the lifetime of the object:
-    if (m_facesFormat != 0)
+    if (facesFormat_ != 0)
         return;
 
     int n = 0;
@@ -189,10 +215,10 @@ void Model::facesFormat (std::string line) {
 
     switch (n) {
         case 0:
-            m_facesFormat = 1;
+            facesFormat_ = 1;
             return;
         case 3:
-            m_facesFormat = 2;
+            facesFormat_ = 2;
             return;
         case 6:
             break;
@@ -204,7 +230,7 @@ void Model::facesFormat (std::string line) {
     // If we get here, it means that we found six slashes '/'
     // We search for double slashes:
     if (line.find ("//") == std::string::npos)
-        m_facesFormat = 3;
+        facesFormat_ = 3;
     else
-        m_facesFormat = 4;
+        facesFormat_ = 4;
 }
