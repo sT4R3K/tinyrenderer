@@ -70,48 +70,6 @@ struct GouraudShader6 : public IShader {
 	}
 };
 
-struct GouraudShaderNRC : public IShader {
-	Vec3f varying_intensity;
-	virtual Vec4f vertex (int iface, int nthvert) {
-		Vec3f normal = model->normal (iface, nthvert);
-		normal = m2v ((Projection).transpose().inverse() * v2m (normal)); // Compute the new normals of the transformed object as said in the 5th chapter.
-		normal = normal.normalize ();
-		varying_intensity[nthvert] = normal * light_dir.normalize ();
-		Vec3f v = model->vert (iface, nthvert);
-		Vec4f gl_vertex = Vec4f (v.x, v.y, v.z, 1);
-		return m2v4 (Viewport * Projection * ModelView * v2m (gl_vertex));
-	}
-	virtual bool fragment (Vec3f bc_coords, TGAColor &color) {
-		float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
-		color = TGAColor (255, 255, 255,255) * ((intensity > 0.f)? intensity : 0.f);
-		return false; // No pixel discarding !
-	}
-};
-
-struct GouraudShaderNRC6 : public IShader {
-	Vec3f varying_intensity;
-	virtual Vec4f vertex (int iface, int nthvert) {
-		Vec3f normal = model->normal (iface, nthvert);
-		normal = m2v ((Projection).transpose().inverse() * v2m (normal)); // Compute the new normals of the transformed object as said in the 5th chapter.
-		normal = normal.normalize ();
-		varying_intensity[nthvert] = normal * light_dir.normalize ();
-		Vec3f v = model->vert (iface, nthvert);
-		Vec4f gl_vertex = Vec4f (v.x, v.y, v.z, 1);
-		return m2v4 (Viewport * Projection * ModelView * v2m (gl_vertex));
-	}
-	virtual bool fragment (Vec3f bc_coords, TGAColor &color) {
-		float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
-		if (intensity>.85) intensity = 1;
-        else if (intensity>.60) intensity = .80;
-        else if (intensity>.45) intensity = .60;
-        else if (intensity>.30) intensity = .45;
-        else if (intensity>.15) intensity = .30;
-        else intensity = 0;
-		color = TGAColor(255, 155, 0, 255)*intensity;
-		return false; // No pixel discarding !
-	}
-};
-
 int main(int argc, char** argv) {
 	if (argc == 3) {
 		model = new Model (argv[1], argv[2]);
