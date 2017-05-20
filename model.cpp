@@ -6,14 +6,14 @@
 #include <cstdlib>
 #include "model.h"
 
-Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_() {
+Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
     model_filename_ = filename;
     texture_filename_ = NULL;
     texture_ = NULL;
     Init ();
 }
 
-Model::Model(const char *model_filename, const char *texture_filename) : facesFormat_(0), verts_(), faces_(), vts_() {
+Model::Model(const char *model_filename, const char *texture_filename) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
     model_filename_ = model_filename;
     texture_filename_ = texture_filename;
     Init ();
@@ -44,8 +44,7 @@ void Model::Init () {
             }
             //*/
             std::vector<Vec3i> f;
-            //std::vector<int> f_vt;
-            int itrash, idx, vt;
+            int idx, vt, vn;
             iss >> trash;
 
             facesFormat (line);
@@ -66,16 +65,18 @@ void Model::Init () {
                 case 5: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn
                 case 6: // f v/vt/vn v/vt/vn v/vt/vn v/vt/vn v/vt/vn
                 case 3: // f v/vt/vn v/vt/vn v/vt/vn
-                    while (iss >> idx >> trash >> vt >> trash >> itrash) {
+                    while (iss >> idx >> trash >> vt >> trash >> vn) {
                         idx--;
                         vt--;
-                        f.push_back(Vec3i (idx, vt, 0));
+                        vn--;
+                        f.push_back(Vec3i (idx, vt, vn));
                     }
                     break;
                 case 4: // f v//vn v//vn v//vn
-                    while (iss >> idx >> trash >> trash >> itrash) {
+                    while (iss >> idx >> trash >> trash >> vn) {
                         idx--;
-                        f.push_back(Vec3i (idx, 0, 0));
+                        vn--;
+                        f.push_back(Vec3i (idx, 0, vn));
                     }
                     break;
             }
@@ -85,6 +86,11 @@ void Model::Init () {
             Vec3f vt;
             for (int i=0;i<3;i++) iss >> vt.raw[i];
             vts_.push_back(vt);
+        } else if (!line.compare(0, 3, "vn ")) {
+            iss >> trash >> trash;
+            Vec3f vn;
+            for (int i = 0; i < 3; i++) iss >> vn.raw[i];
+            vns_.push_back (vn);
         }
     }
 
@@ -138,6 +144,10 @@ Vec3f Model::vert(int i) {
 
 Vec3f Model::vt (int idx) {
     return vts_[idx];
+}
+
+Vec3f Model::vn (int idx) {
+    return vns_[idx];
 }
 
 void Model::minMaxXY () {

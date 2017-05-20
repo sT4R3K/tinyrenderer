@@ -16,6 +16,7 @@ private:
 	std::vector<Vec3f> verts_;
 	std::vector<std::vector<Vec3i> > faces_;
 	std::vector<Vec3f> vts_;
+	std::vector<Vec3f> vns_;
 
 	float m_minX;
 	float m_maxX;
@@ -50,6 +51,7 @@ public:
 	Vec3f vert (int i);
 	std::vector<Vec3i> face (int idx);
 	Vec3f vt (int idx);
+	Vec3f vn (int idx);
 };
 
 #endif //__MODEL_H__
