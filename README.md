@@ -28,7 +28,7 @@
 
 5. Moving the camera   
    * [4.1](https://github.com/sT4R3K/tinyrenderer/tree/4.1) : Chain of coordinate transformations (lookat, viewport).
-   * [5.0](https://github.com/sT4R3K/tinyrenderer/tree/5.0) : not yet!
+   * [5.0](https://github.com/sT4R3K/tinyrenderer/tree/5.0) : "Transformation of normal vectors!"
    
 6. Shaders for the software renderer
    * [5.1](https://github.com/sT4R3K/tinyrenderer/tree/5.1) : Refactoring the source code.
