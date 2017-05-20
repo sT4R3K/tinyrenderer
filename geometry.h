@@ -56,11 +56,47 @@ template <class t> struct Vec3 {
     template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
 };
 
+template <class t> struct Vec4 {
+    t raw[4];
+    t& x;
+    t& y;
+    t& z;
+    t& w;
+    Vec4<t>() : raw(), x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { x = y = z = w = t(); }
+    Vec4<t>(t _x, t _y, t _z, t _w) : raw(), x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { x=_x; y=_y; z=_z; w=_w; }
+    template <class u> Vec4<t>(const Vec4<u> &v);
+    Vec4<t>(const Vec4<t> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { *this = v; }
+    Vec4<t> & operator =(const Vec4<t> &v) {
+        if (this != &v) {
+            x = v.x;
+            y = v.y;
+            z = v.z;
+            w = v.w;
+        }
+        return *this;
+    }
+    //Vec4<t> operator ^(const Vec4<t> &v) const { return Vec4<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x, ); }
+    // The cross product is not defined in four dimensions. Instead the exterior product is used for some applications.
+    Vec4<t> operator +(const Vec4<t> &v) const { return Vec4<t>(x+v.x, y+v.y, z+v.z, w+z.w); }
+    Vec4<t> operator -(const Vec4<t> &v) const { return Vec4<t>(x-v.x, y-v.y, z-v.z, w-z.w); }
+    Vec4<t> operator *(float f)          const { return Vec4<t>(x*f, y*f, z*f, w*f); }
+    t       operator *(const Vec4<t> &v) const { return x*v.x + y*v.y + z*v.z + w*v.w; }
+    float norm () const { return std::sqrt(x*x+y*y+z*z+w*w); }
+    Vec4<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
+    t& operator[](const int i) {return raw[i];}
+    template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
+};
+
 
 typedef Vec2<float> Vec2f;
 typedef Vec2<int>   Vec2i;
 typedef Vec3<float> Vec3f;
 typedef Vec3<int>   Vec3i;
+typedef Vec4<float> Vec4f;
+typedef Vec4<int>   Vec4i;
+
+template <> template <> Vec4<int>::Vec4(const Vec4<float> &v);
+template <> template <> Vec4<float>::Vec4(const Vec4<int> &v);
 
 template <> template <> Vec3<int>::Vec3(const Vec3<float> &v);
 template <> template <> Vec3<float>::Vec3(const Vec3<int> &v);

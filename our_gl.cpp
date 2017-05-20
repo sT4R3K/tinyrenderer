@@ -7,8 +7,18 @@ Matrix v2m (Vec3f v) {
 	return m;
 }
 
+Matrix v2m (Vec4f v) {
+	Matrix m (4,1);
+	for (int i = 0; i<4; i++) m[i][0] = v[i];
+	return m;
+}
+
 Vec3f m2v (Matrix m) {
 	return Vec3f (m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0]);
+}
+
+Vec4f m2v4 (Matrix m) {
+	return Vec4f (m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0], m[3][0]/m[3][0]);
 }
 
 vector<Vec3f> m2vs (Matrix m) {
@@ -106,8 +116,8 @@ void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffe
 	}
 }
 
-Vec3f barycentric (Vec3f *pts, Vec3f P) {
-	Vec3f A = pts[0], B = pts[1], C = pts[2];
+Vec3f barycentric (Vec4f *pts, Vec3f P) {
+	Vec4f A = pts[0], B = pts[1], C = pts[2];
 
 	float D = (A.x-C.x)*(B.y-C.y) - (B.x-C.x)*(A.y-C.y);
 	if (D == 0) return Vec3f (-1,-1,-1); // Getting rid of degenerate triangles.
@@ -118,14 +128,14 @@ Vec3f barycentric (Vec3f *pts, Vec3f P) {
 	return Vec3f (alpha, beta, (1. - alpha - beta));
 }
 
-void triangle (vector<Vec3f> pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords){
-	Vec3f points[3];
+void triangle (vector<Vec4f> pts, IShader *shader, float *zbuffer, TGAImage &image, Vec3f *texture_coords){
+	Vec4f points[3];
 	for (int i = 0; i < 3; ++i)
 		points[i] = pts.at (i);
-	triangle (points, zbuffer, image, intensity, texture_coords);
+	triangle (points, shader, zbuffer, image, texture_coords);
 }
 
-void triangle (Vec3f  *pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords) {
+void triangle (Vec4f  *pts, IShader *shader, float *zbuffer, TGAImage &image, Vec3f *texture_coords) {
 	Vec2f min_max [2]; // [min_x, min_y, max_x, max_y]
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
@@ -141,10 +151,13 @@ void triangle (Vec3f  *pts, float *zbuffer, TGAImage &image, float intensity, Ve
 				P.z = 0;
 				for (int i=0; i<3; i++) P.z += pts[i].z*bc_P[i];
 				if (zbuffer[int(P.x+P.y*width)] < P.z) {
-					zbuffer[int(P.x+P.y*width)] = P.z;
-					TGAColor color = (texture_coords == NULL)? TGAColor(255, 255, 255, 255) : model->getTextureColor (texture_coords, bc_P);
-					for (int i=0; i<3; i++) color[i] = color[i] * intensity;
-					image.set (P.x, P.y, color);
+					//TGAColor color = (texture_coords == NULL)? TGAColor(255, 255, 255, 255) : model->getTextureColor (texture_coords, bc_P);
+					//for (int i=0; i<3; i++) color[i] = color[i];
+					TGAColor color;
+					if (!shader->fragment (bc_P, color)) {
+						zbuffer[int(P.x+P.y*width)] = P.z;
+						image.set (P.x, P.y, color);
+					}
 				}
 			}
 		}

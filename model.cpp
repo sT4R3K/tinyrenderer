@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+
 #include "model.h"
 
 Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
@@ -148,12 +149,20 @@ Vec3f Model::vert(int i) {
     return verts_[i];
 }
 
+Vec3f Model::vert (int iface, int nthvert) {
+    return vert ((face (iface))[nthvert][0]);
+}
+
 Vec3f Model::vt (int idx) {
     return vts_[idx];
 }
 
 Vec3f Model::vn (int idx) {
     return vns_[idx];
+}
+
+Vec3f Model::normal (int iface, int nthvert) {
+    return vn ((face (iface))[nthvert][2]);
 }
 
 void Model::minMaxXY () {

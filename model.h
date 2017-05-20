@@ -48,10 +48,12 @@ public:
 	int nverts ();
 	int nfaces ();
 	int nvts ();
-	Vec3f vert (int i);
 	std::vector<Vec3i> face (int idx);
+	Vec3f vert (int i);
+	Vec3f vert (int iface, int nthvert);
 	Vec3f vt (int idx);
 	Vec3f vn (int idx);
+	Vec3f normal (int iface, int nthvert);
 };
 
 #endif //__MODEL_H__

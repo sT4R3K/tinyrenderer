@@ -4,6 +4,20 @@
 #include <iostream>
 #include "geometry.h"
 
+template <> template <> Vec4<int>::Vec4<>(const Vec4<float> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) {
+    x = int(floor(v.x)+.5);
+    y = int(floor(v.y)+.5);
+    z = int(floor(v.z)+.5);
+    w = int(floor(v.w)+.5);
+}
+
+template <> template <> Vec4<float>::Vec4<>(const Vec4<int> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) {
+    x = v.x;
+    y = v.y;
+    z = v.z;
+    w = v.w;
+}
+
 template <> template <> Vec3<int>::Vec3<>(const Vec3<float> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]) {
     x = int(floor(v.x)+.5);
     y = int(floor(v.y)+.5);
