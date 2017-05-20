@@ -32,6 +32,6 @@
    
 6. Shaders for the software renderer
    * [5.1](https://github.com/sT4R3K/tinyrenderer/tree/5.1) : Refactoring the source code.
-   * [5.2](https://github.com/sT4R3K/tinyrenderer/tree/5.2)
-   * [5.3](https://github.com/sT4R3K/tinyrenderer/tree/5.3)
-   * [5.4](https://github.com/sT4R3K/tinyrenderer/tree/5.4)
+   * [5.2](https://github.com/sT4R3K/tinyrenderer/tree/5.2) : A first shader!
+   * [5.3](https://github.com/sT4R3K/tinyrenderer/tree/5.3) : A second shader! (Computing new normals of the transformed object as said in the 5th chapter.)
+   * [5.4](https://github.com/sT4R3K/tinyrenderer/tree/5.4) : Texture !
