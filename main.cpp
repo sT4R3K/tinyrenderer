@@ -17,18 +17,16 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 1600;
-const int height = 1600;
+const int width  = 4800;
+const int height = 4800;
 const int depth  = 255;
 
 Vec3f light_dir (0,0,-1);
-Vec3f camera (0,0,3);
-Vec3f eye (1,2,3);
+Vec3f eye (1,1,3);
 Vec3f center (0,0,0);
 Vec3f up (0,1,0);
 
 Model *model;
-TGAImage *texture = NULL;
 
 Matrix ModelView;
 Matrix Viewport;
@@ -36,10 +34,7 @@ Matrix Projection;
 
 int main(int argc, char** argv) {
 	if (argc == 3) {
-		model = new Model (argv[1]);
-		texture = new TGAImage ();
-		texture->read_tga_file (argv[2]);
-		texture->flip_vertically ();
+		model = new Model (argv[1], argv[2]);
 	}else if (argc == 2) {
 		model = new Model (argv[1]);
 	} else {
@@ -47,45 +42,50 @@ int main(int argc, char** argv) {
 	}
 
 	float *zbuffer = new float[width * height];
-	for (int i=0; i<width*height; i++) {
-        zbuffer[i] = std::numeric_limits<float>::min();
-    }
+	for (int i = 0; i < width * height; i++)
+		zbuffer[i] = -numeric_limits<float>::infinity();
 
 	TGAImage image (width, height, TGAImage::RGB);
 
-	ModelView = lookat (eye, center, up);
 	Viewport = viewport (width/9., height/9., 7*width/9., 7*height/9.);
 	Projection = projection (-1./(eye-center).norm());
+	ModelView = lookat (eye, center, up);
 
-	for (int i=0; i<model->nfaces(); i++) { 
-		vector<int> face = model->face(i); 
+	cout << "Rendering...";
+	for (int i = 0; i < model->nfaces(); i++) { 
+		vector<Vec3i> face = model->face(i); 
 		vector<Vec3f> screen_coords; 
 		vector<Vec3f> world_coords; 
-		for (unsigned int j=0; j<face.size()/2; j++) // (size/2) because the second half contains vt(s).
-			world_coords.push_back (model->vert(face[j])); 
+		for (unsigned int k = 0; k < face.size(); k++)
+			world_coords.push_back (model->vert(face[k][0])); 
 		
 		screen_coords = m2vs (Viewport * Projection * ModelView * vs2m (world_coords));
+		// Matrix Normal_transformer = (VP * Projection * ModelView).transpose().inverse();
 
 		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
 		n.normalize(); 
 		float intensity = n*light_dir;
 
 		if (intensity>0) {
-			if (texture == NULL)
-				triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer);
+			if (! model->has_texture ())
+				triangle(screen_coords, zbuffer, image, intensity);
 			else {
-				Vec2f texture_coords[3];
-				for (unsigned int k = 0; k < face.size()/2; k++) {
-					Vec3f v = model->vt(face[k+(face.size()/2)]);
-					texture_coords [k] = Vec2f (v.x*texture->get_width(), v.y*texture->get_height());
-				}
-				textured_triangle (screen_coords, texture_coords, image, intensity, zbuffer); 
+				Vec3f texture_coords[3];
+				for (int k = 0; k < 3; k++)
+					texture_coords [k]= model->vt(face[k][1]);
+				triangle(screen_coords, zbuffer, image, intensity, texture_coords);
 			}
-		} 
+		}
+
+		if (i == 0) continue;
+		else if ((i+1)/model->nfaces () == 1) cout << "100%" << endl;
+		else if ((i+1) % int (roundf (model->nfaces ()/10)) == 0) cout << roundf (100 * i / model->nfaces ()) << "%...";
 	}
 
-	image.flip_vertically();	
+	image.flip_vertically();
+	cout << "Wrighting to output.tga..." << endl;
 	image.write_tga_file("output.tga");
+	cout << "OK" << endl;
 	
 	return 0;
 }

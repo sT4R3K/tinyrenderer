@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "tgaimage.h"
+#include "model.h"
 #include "geometry.h"
 
 #define PI 3.14159265
@@ -20,7 +21,7 @@ extern const int width;
 extern const int height;
 extern const int depth;
 
-extern TGAImage *texture;
+extern Model *model;
 
 extern Matrix ModelView;
 extern Matrix Viewport;
@@ -35,7 +36,6 @@ Matrix shear_x (float shear);
 Matrix shear_y (float shear);
 Matrix rotate (float alpha);
 Matrix translate (float x_offset, float y_offset, float z_offset = 0.);
-Matrix project (float p); // Matrix's bottom left.
 
 Matrix viewport (int x_offset, int y_offset, int window_width, int window_height);
 Matrix projection (float c);
@@ -49,14 +49,11 @@ struct IShader {
 };
 //*/
 
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
-void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color);
 void rasterize (Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int *ybuffer);
 Vec3f barycentric (Vec3f *pts, Vec3f P);
-void triangle (vector<Vec3f> pts, TGAImage &image, TGAColor color, float *zbuffer);
-void triangle (Vec3f *pts, TGAImage &image, TGAColor color, float *zbuffer);
-void textured_triangle (vector<Vec3f>  pts, Vec2f *texture_pts, TGAImage &image, float intensity, float *zbuffer);
-void textured_triangle (Vec3f  *pts, Vec2f *texture_pts, TGAImage &image, float intensity, float *zbuffer);
-TGAColor getTextureColor (Vec2f *texture_pts, Vec3f P, float intensity);
+void triangle (vector<Vec3f> pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords = NULL);
+void triangle (Vec3f *pts, float *zbuffer, TGAImage &image, float intensity, Vec3f *texture_coords = NULL);
+void line(Vec3i p0, Vec3i p1, TGAImage &image, TGAColor color);
+void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color);
 
 #endif
