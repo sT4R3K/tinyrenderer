@@ -17,8 +17,8 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0,   0, 255,   255);
 const TGAColor yellow = TGAColor(255, 255, 0,   255);
 
-const int width  = 800;
-const int height = 800;
+const int width  = 4800;
+const int height = 4800;
 const int depth  = 255;
 
 Vec3f light_dir (1,1,1);
@@ -134,12 +134,10 @@ int main(int argc, char** argv) {
 	cout << "Rendering...";
 	GouraudShader *shader = new GouraudShader ();
 	for (int i = 0; i < model->nfaces(); i++) { 
-		if (! model->has_texture ()) {
-			Vec4f screen_coords[3];
-			for (int k = 0; k < 3; k++)
-				screen_coords[k] = shader->vertex (i, k);
-			triangle(screen_coords, shader, zbuffer, image);
-		}
+		Vec4f screen_coords[3];
+		for (int k = 0; k < 3; k++)
+			screen_coords[k] = shader->vertex (i, k);
+		triangle(screen_coords, shader, zbuffer, image);
 
 		if (i == 0) continue;
 		else if ((i+1)/model->nfaces () == 1) cout << "100%" << endl;
