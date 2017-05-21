@@ -38,7 +38,7 @@ struct GouraudShader : public IShader {
 
 	virtual Vec4f vertex (int iface, int nthvert) {
 		Vec3f normal = model->normal (iface, nthvert);
-		normal = m2v ((Projection).transpose().inverse() * v2m (normal)); // Compute the new normals of the transformed object as said in the 5th chapter.
+		normal = m2v ((Projection * ModelView).transpose().inverse() * v2m (normal)); // Compute the new normals of the transformed object as said in the 5th chapter.
 		normal = normal.normalize ();
 		varying_intensity[nthvert] = normal * light_dir.normalize ();
 		varying_texture[nthvert] = model->vt (iface, nthvert);
