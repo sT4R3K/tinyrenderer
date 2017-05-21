@@ -35,5 +35,5 @@
    * [5.2](https://github.com/sT4R3K/tinyrenderer/tree/5.2) : A first shader!
    * [5.3](https://github.com/sT4R3K/tinyrenderer/tree/5.3) : A second shader! (Computing new normals of the transformed object as said in the 5th chapter.)
    * [5.4](https://github.com/sT4R3K/tinyrenderer/tree/5.4) : Texture!
-   * [5.5](https://github.com/sT4R3K/tinyrenderer/tree/5.4) : Normalmapping.
-   * [6.0](https://github.com/sT4R3K/tinyrenderer/tree/5.4) : Specular mapping.
+   * [5.5](https://github.com/sT4R3K/tinyrenderer/tree/5.5) : Normalmapping.
+   * [6.0](https://github.com/sT4R3K/tinyrenderer/tree/6.0) : Specular mapping.
