@@ -11,8 +11,10 @@ private:
 	const char *model_filename_;
 	const char *texture_filename_;
 	const char *normalMap_filename_;
+	const char *specularMap_filename_;
 	TGAImage *texture_;
 	TGAImage *normalMap_;
+	TGAImage *specularMap_;
 
 	int facesFormat_;
 	std::vector<Vec3f> verts_;
@@ -29,6 +31,7 @@ private:
 	void Init ();
 	void loadTexture ();
 	void loadNormalMap ();
+	void loadSpecularMap ();
 
 	void minMaxXY ();
 	float minX ();
@@ -45,10 +48,19 @@ public:
 	Model (const char *model_filename, const char *texture_filename);
 	Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename);
 	Model (const char *model_filename, const char *normalMap_filename, bool no_texture);
+	Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename, const char *specularMap_filename);
+
 	~Model ();
 
 	TGAColor getTextureColor (Vec3f *texture_coords, Vec3f P);
 	bool has_texture ();
+
+	Vec3f normal (int iface, int nthvert);
+	Vec3f normal_from_map (Vec3f *nmap_coords, Vec3f P);
+	bool has_normal_map ();
+	
+	float specular (Vec3f *specular_coords, Vec3f P);
+	bool has_specular_map ();
 
 	int nverts ();
 	int nfaces ();
@@ -58,9 +70,6 @@ public:
 	Vec3f vert (int iface, int nthvert);
 	Vec3f vt (int idx);
 	Vec3f vn (int idx);
-	Vec3f normal (int iface, int nthvert);
-	Vec3f normal_from_map (Vec3f *nmap_coords, Vec3f P);
-	bool has_normal_map ();
 	Vec3f vt (int iface, int nthvert);
 };
 

@@ -12,6 +12,7 @@ Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_()
     texture_filename_ = NULL;
     texture_ = NULL;
     normalMap_ = NULL;
+    specularMap_ = NULL;
     std::cout << "Loading " << filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -21,6 +22,7 @@ Model::Model(const char *model_filename, const char *texture_filename) : facesFo
     model_filename_ = model_filename;
     texture_filename_ = texture_filename;
     normalMap_ = NULL;
+    specularMap_ = NULL;
     std::cout << "Loading " << model_filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -33,6 +35,7 @@ Model::Model (const char *model_filename, const char *texture_filename, const ch
     model_filename_ = model_filename;
     texture_filename_ = texture_filename;
     normalMap_filename_ = normalMap_filename;
+    specularMap_ = NULL;
     std::cout << "Loading " << model_filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -48,6 +51,7 @@ Model::Model (const char *model_filename, const char *normalMap_filename, bool n
     model_filename_ = model_filename;
     normalMap_filename_ = normalMap_filename;
     texture_ = NULL;
+    specularMap_ = NULL;
     std::cout << "Loading " << model_filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -55,6 +59,26 @@ Model::Model (const char *model_filename, const char *normalMap_filename, bool n
     loadNormalMap ();
     std::cout << "OK" << std::endl;
 }
+
+Model::Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename, const char *specularMap_filename) {
+    model_filename_ = model_filename;
+    texture_filename_ = texture_filename;
+    normalMap_filename_ = normalMap_filename;
+    specularMap_filename_ =specularMap_filename;
+    std::cout << "Loading " << model_filename << "..." << std::endl;
+    Init ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << texture_filename << "..." << std::endl;
+    loadTexture ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << normalMap_filename << "..." << std::endl;
+    loadNormalMap ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << specularMap_filename << "..." << std::endl;
+    loadSpecularMap ();
+    std::cout << "OK" << std::endl;
+}
+
 
 void Model::Init () {
     std::ifstream in;
@@ -153,6 +177,12 @@ void Model::loadNormalMap () {
     normalMap_->flip_vertically ();
 }
 
+void Model::loadSpecularMap () {
+    specularMap_ = new TGAImage ();
+    specularMap_->read_tga_file (specularMap_filename_);
+    specularMap_->flip_vertically ();
+}
+
 TGAColor Model::getTextureColor (Vec3f *texture_coords, Vec3f P) {
     Vec2f T; // T : interpolated P inside the triangle *texture_coords.
     for (int i=0; i<3; i++) T.x += texture_coords[i][0]*P[i];
@@ -218,6 +248,18 @@ bool Model::has_normal_map () {
 
 Vec3f Model::vt (int iface, int nthvert) {
     return vt ((face (iface))[nthvert][1]);
+}
+
+float Model::specular (Vec3f *specular_coords, Vec3f P) {
+    Vec2f T; // T : interpolated P inside the triangle *specular_coords.
+    for (int i=0; i<3; i++) T.x += specular_coords[i][0]*P[i];
+    for (int i=0; i<3; i++) T.y += specular_coords[i][1]*P[i];
+
+    return specularMap_->get(roundf(T.x * specularMap_->get_width ()), roundf(T.y * specularMap_->get_height ()))[0]/1.f;
+}
+
+bool Model::has_specular_map () {
+    return (texture_ != NULL);
 }
 
 void Model::minMaxXY () {

@@ -53,6 +53,15 @@ struct GouraudShader : public IShader {
 			Vec3f l = (m2v (uniform_M * v2m (light_dir))).normalize ();
 			float intensity = n*l;
 			color = TGAColor (255, 255, 255, 255) * ((intensity > 0.f)? intensity : 0.f); // Model already knows how to interpolate texture coordinates.
+		} else if (model->has_normal_map () && model->has_specular_map ()) {
+			Vec3f n = (m2v (uniform_MIT * v2m (model->normal_from_map (varying_texture, bc_coords)))).normalize ();
+			Vec3f l = (m2v (uniform_M * v2m (light_dir))).normalize ();
+			Vec3f r = (n * (n * l* 2.f) - l).normalize (); // Reflected light.
+			float spec = pow (max (r.z, 0.f), model->specular (varying_texture, bc_coords));
+			float diff = max (0.f, n*l);
+			TGAColor c = model->getTextureColor (varying_texture, bc_coords);
+			color = c;
+			for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + c[i]*(diff + .6*spec), 255);
 		} else if (model->has_normal_map ()) {
 			Vec3f n = (m2v (uniform_MIT * v2m (model->normal_from_map (varying_texture, bc_coords)))).normalize ();
 			Vec3f l = (m2v (uniform_M * v2m (light_dir))).normalize ();
@@ -71,7 +80,9 @@ struct GouraudShader : public IShader {
 };
 
 int main(int argc, char** argv) {
-	if (argc == 4 && argv[1] == string ("no_texture")) { // Dirty programming something for diablo3_pose.obj (has normal map but no texture)
+	if (argc == 5 ) {
+		model = new Model (argv[1], argv[2], argv[3], argv[4]);
+	} else if (argc == 4 && argv[1] == string ("no_texture")) { // Dirty programming something for diablo3_pose.obj (has normal map but no texture)
 		model = new Model (argv[2], argv[3], true);
 	} else if (argc == 4) {
 		model = new Model (argv[1], argv[2], argv[3]);
