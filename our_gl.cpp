@@ -151,8 +151,6 @@ void triangle (Vec4f  *pts, IShader *shader, float *zbuffer, TGAImage &image, Ve
 				P.z = 0;
 				for (int i=0; i<3; i++) P.z += pts[i].z*bc_P[i];
 				if (zbuffer[int(P.x+P.y*width)] < P.z) {
-					//TGAColor color = (texture_coords == NULL)? TGAColor(255, 255, 255, 255) : model->getTextureColor (texture_coords, bc_P);
-					//for (int i=0; i<3; i++) color[i] = color[i];
 					TGAColor color;
 					if (!shader->fragment (bc_P, color)) {
 						zbuffer[int(P.x+P.y*width)] = P.z;
