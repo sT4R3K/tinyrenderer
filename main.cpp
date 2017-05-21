@@ -3,6 +3,7 @@
 #include <vector>
 #include <limits>
 #include <cmath>
+#include <ctime>
 
 #include "tgaimage.h"
 #include "model.h"
@@ -35,6 +36,8 @@ Matrix Projection;
 struct GouraudShader : public IShader {
 	Vec3f varying_intensity;
 	Vec3f varying_texture [3];
+	Matrix uniform_M;
+	Matrix uniform_MIT;
 
 	virtual Vec4f vertex (int iface, int nthvert) {
 		Vec3f normal = model->normal (iface, nthvert);
@@ -45,23 +48,41 @@ struct GouraudShader : public IShader {
 		return m2v4 (Viewport * Projection * ModelView * v2m (gl_vertex));
 	}
 	virtual bool fragment (Vec3f bc_coords, TGAColor &color) {
-		float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
-		if (!model->has_texture ())
-			color = TGAColor (255, 255, 255, 255) * ((intensity > 0.f)? intensity : 0.f);
-		else
+		if (model->has_normal_map () && !model->has_texture ()) {
+			Vec3f n = (m2v (uniform_MIT * v2m (model->normal_from_map (varying_texture, bc_coords)))).normalize ();
+			Vec3f l = (m2v (uniform_M * v2m (light_dir))).normalize ();
+			float intensity = n*l;
+			color = TGAColor (255, 255, 255, 255) * ((intensity > 0.f)? intensity : 0.f); // Model already knows how to interpolate texture coordinates.
+		} else if (model->has_normal_map ()) {
+			Vec3f n = (m2v (uniform_MIT * v2m (model->normal_from_map (varying_texture, bc_coords)))).normalize ();
+			Vec3f l = (m2v (uniform_M * v2m (light_dir))).normalize ();
+			float intensity = n*l;
 			color = model->getTextureColor (varying_texture, bc_coords) * ((intensity > 0.f)? intensity : 0.f); // Model already knows how to interpolate texture coordinates.
+		} else if (model->has_texture ()) {
+			float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
+			color = model->getTextureColor (varying_texture, bc_coords) * ((intensity > 0.f)? intensity : 0.f); // Model already knows how to interpolate texture coordinates.
+		}
+		else {
+			float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
+			color = TGAColor (255, 255, 255, 255) * ((intensity > 0.f)? intensity : 0.f);
+		}
 		return false; // No pixel discarding !
 	}
 };
 
 int main(int argc, char** argv) {
-	if (argc == 3) {
+	if (argc == 4 && argv[1] == string ("no_texture")) { // Dirty programming something for diablo3_pose.obj (has normal map but no texture)
+		model = new Model (argv[2], argv[3], true);
+	} else if (argc == 4) {
+		model = new Model (argv[1], argv[2], argv[3]);
+	} else if (argc == 3) {
 		model = new Model (argv[1], argv[2]);
 	}else if (argc == 2) {
 		model = new Model (argv[1]);
 	} else {
 		model = new Model ("obj/african_head.obj");
 	}
+	clock_t begin = clock();
 
 	float *zbuffer = new float[width * height];
 	for (int i = 0; i < width * height; i++)
@@ -75,6 +96,8 @@ int main(int argc, char** argv) {
 
 	cout << "Rendering...";
 	GouraudShader *shader = new GouraudShader ();
+	shader->uniform_M = Projection * ModelView;
+	shader->uniform_MIT = (Projection * ModelView).inverse ().transpose ();
 	for (int i = 0; i < model->nfaces(); i++) { 
 		Vec4f screen_coords[3];
 		for (int k = 0; k < 3; k++)
@@ -91,5 +114,6 @@ int main(int argc, char** argv) {
 	image.write_tga_file("output.tga");
 	cout << "OK" << endl;
 	
+	cout << "Total time: " << double(clock() - begin) / CLOCKS_PER_SEC << "s." << endl;
 	return 0;
 }

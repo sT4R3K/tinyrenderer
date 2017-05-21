@@ -11,6 +11,7 @@ Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_()
     model_filename_ = filename;
     texture_filename_ = NULL;
     texture_ = NULL;
+    normalMap_ = NULL;
     std::cout << "Loading " << filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -19,6 +20,7 @@ Model::Model(const char *filename) : facesFormat_(0), verts_(), faces_(), vts_()
 Model::Model(const char *model_filename, const char *texture_filename) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
     model_filename_ = model_filename;
     texture_filename_ = texture_filename;
+    normalMap_ = NULL;
     std::cout << "Loading " << model_filename << "..." << std::endl;
     Init ();
     std::cout << "OK" << std::endl;
@@ -37,7 +39,19 @@ Model::Model (const char *model_filename, const char *texture_filename, const ch
     std::cout << "Loading " << texture_filename << "..." << std::endl;
     loadTexture ();
     std::cout << "OK" << std::endl;
-    std::cout << "Loading " << texture_filename << "..." << std::endl;
+    std::cout << "Loading " << normalMap_filename << "..." << std::endl;
+    loadNormalMap ();
+    std::cout << "OK" << std::endl;
+}
+
+Model::Model (const char *model_filename, const char *normalMap_filename, bool no_texture) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
+    model_filename_ = model_filename;
+    normalMap_filename_ = normalMap_filename;
+    texture_ = NULL;
+    std::cout << "Loading " << model_filename << "..." << std::endl;
+    Init ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << normalMap_filename << "..." << std::endl;
     loadNormalMap ();
     std::cout << "OK" << std::endl;
 }
@@ -185,13 +199,23 @@ Vec3f Model::vn (int idx) {
 Vec3f Model::normal (int iface, int nthvert) {
     return vn ((face (iface))[nthvert][2]);
 }
-/*
-Vec3f Model::normal_from_map (int idx) {
-    Vec2f T; // T : interpolated P inside the triangle *texture_coords.
-    for (int i=0; i<3; i++) T.x += texture_coords[i][0]*P[i];
-    for (int i=0; i<3; i++) T.y += texture_coords[i][1]*P[i];
+
+Vec3f Model::normal_from_map (Vec3f *nmap_coords, Vec3f P) {
+    Vec2f T; // T : interpolated P inside the triangle *nmap_coords.
+    for (int i=0; i<3; i++) T.x += nmap_coords[i][0]*P[i];
+    for (int i=0; i<3; i++) T.y += nmap_coords[i][1]*P[i];
+
+    TGAColor color = normalMap_->get (roundf(T.x * normalMap_->get_width ()), roundf(T.y * normalMap_->get_height ()));
+    Vec3f res;
+    for (int i = 0; i < 3; i++)
+        res[2-i] = (float)color[i]/255.f*2.f - 1.f;
+    return res;
 }
-*/
+
+bool Model::has_normal_map () {
+    return (normalMap_ != NULL);
+}
+
 Vec3f Model::vt (int iface, int nthvert) {
     return vt ((face (iface))[nthvert][1]);
 }

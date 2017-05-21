@@ -44,6 +44,7 @@ public:
 	Model (const char *filename);
 	Model (const char *model_filename, const char *texture_filename);
 	Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename);
+	Model (const char *model_filename, const char *normalMap_filename, bool no_texture);
 	~Model ();
 
 	TGAColor getTextureColor (Vec3f *texture_coords, Vec3f P);
@@ -58,7 +59,8 @@ public:
 	Vec3f vt (int idx);
 	Vec3f vn (int idx);
 	Vec3f normal (int iface, int nthvert);
-	Vec3f normal_from_map (int idx);
+	Vec3f normal_from_map (Vec3f *nmap_coords, Vec3f P);
+	bool has_normal_map ();
 	Vec3f vt (int iface, int nthvert);
 };
 
