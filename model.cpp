@@ -27,6 +27,21 @@ Model::Model(const char *model_filename, const char *texture_filename) : facesFo
     std::cout << "OK" << std::endl;
 }
 
+Model::Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename) : facesFormat_(0), verts_(), faces_(), vts_(), vns_() {
+    model_filename_ = model_filename;
+    texture_filename_ = texture_filename;
+    normalMap_filename_ = normalMap_filename;
+    std::cout << "Loading " << model_filename << "..." << std::endl;
+    Init ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << texture_filename << "..." << std::endl;
+    loadTexture ();
+    std::cout << "OK" << std::endl;
+    std::cout << "Loading " << texture_filename << "..." << std::endl;
+    loadNormalMap ();
+    std::cout << "OK" << std::endl;
+}
+
 void Model::Init () {
     std::ifstream in;
     in.open (model_filename_, std::ifstream::in);
@@ -118,6 +133,12 @@ void Model::loadTexture () {
     texture_->flip_vertically ();
 }
 
+void Model::loadNormalMap () {
+    normalMap_ = new TGAImage ();
+    normalMap_->read_tga_file (normalMap_filename_);
+    normalMap_->flip_vertically ();
+}
+
 TGAColor Model::getTextureColor (Vec3f *texture_coords, Vec3f P) {
     Vec2f T; // T : interpolated P inside the triangle *texture_coords.
     for (int i=0; i<3; i++) T.x += texture_coords[i][0]*P[i];
@@ -164,7 +185,13 @@ Vec3f Model::vn (int idx) {
 Vec3f Model::normal (int iface, int nthvert) {
     return vn ((face (iface))[nthvert][2]);
 }
-
+/*
+Vec3f Model::normal_from_map (int idx) {
+    Vec2f T; // T : interpolated P inside the triangle *texture_coords.
+    for (int i=0; i<3; i++) T.x += texture_coords[i][0]*P[i];
+    for (int i=0; i<3; i++) T.y += texture_coords[i][1]*P[i];
+}
+*/
 Vec3f Model::vt (int iface, int nthvert) {
     return vt ((face (iface))[nthvert][1]);
 }

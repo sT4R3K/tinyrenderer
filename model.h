@@ -10,7 +10,9 @@ class Model {
 private:
 	const char *model_filename_;
 	const char *texture_filename_;
+	const char *normalMap_filename_;
 	TGAImage *texture_;
+	TGAImage *normalMap_;
 
 	int facesFormat_;
 	std::vector<Vec3f> verts_;
@@ -25,7 +27,8 @@ private:
 
 private:
 	void Init ();
-	void loadTexture ();	
+	void loadTexture ();
+	void loadNormalMap ();
 
 	void minMaxXY ();
 	float minX ();
@@ -40,6 +43,7 @@ private:
 public:
 	Model (const char *filename);
 	Model (const char *model_filename, const char *texture_filename);
+	Model (const char *model_filename, const char *texture_filename, const char *normalMap_filename);
 	~Model ();
 
 	TGAColor getTextureColor (Vec3f *texture_coords, Vec3f P);
@@ -54,6 +58,7 @@ public:
 	Vec3f vt (int idx);
 	Vec3f vn (int idx);
 	Vec3f normal (int iface, int nthvert);
+	Vec3f normal_from_map (int idx);
 	Vec3f vt (int iface, int nthvert);
 };
 
