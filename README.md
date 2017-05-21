@@ -37,3 +37,8 @@
    * [5.4](https://github.com/sT4R3K/tinyrenderer/tree/5.4) : Texture!
    * [5.5](https://github.com/sT4R3K/tinyrenderer/tree/5.5) : Normalmapping.
    * [6.0](https://github.com/sT4R3K/tinyrenderer/tree/6.0) : Specular mapping.
+
+6. (bis) tangent space normal mapping
+   * [6.1](https://github.com/sT4R3K/tinyrenderer/tree/6.1) : 
+   * [6.2](https://github.com/sT4R3K/tinyrenderer/tree/6.2) : 
+   * [6.3](https://github.com/sT4R3K/tinyrenderer/tree/6.3) : 
