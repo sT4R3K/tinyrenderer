@@ -165,6 +165,10 @@ Vec3f Model::normal (int iface, int nthvert) {
     return vn ((face (iface))[nthvert][2]);
 }
 
+Vec3f Model::vt (int iface, int nthvert) {
+    return vt ((face (iface))[nthvert][1]);
+}
+
 void Model::minMaxXY () {
     m_minX = verts_[0].x;
     m_maxX = verts_[0].x;

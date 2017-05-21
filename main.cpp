@@ -21,7 +21,7 @@ const int width  = 4800;
 const int height = 4800;
 const int depth  = 255;
 
-Vec3f light_dir (1,1,1);
+Vec3f light_dir (1,-1,1);
 Vec3f eye (1,1,3);
 Vec3f center (0,0,0);
 Vec3f up (0,1,0);
@@ -34,18 +34,24 @@ Matrix Projection;
 
 struct GouraudShader : public IShader {
 	Vec3f varying_intensity;
+	Vec3f varying_texture [3];
+
 	virtual Vec4f vertex (int iface, int nthvert) {
 		Vec3f normal = model->normal (iface, nthvert);
 		normal = m2v ((Projection).transpose().inverse() * v2m (normal)); // Compute the new normals of the transformed object as said in the 5th chapter.
 		normal = normal.normalize ();
 		varying_intensity[nthvert] = normal * light_dir.normalize ();
+		varying_texture[nthvert] = model->vt (iface, nthvert);
 		Vec3f v = model->vert (iface, nthvert);
 		Vec4f gl_vertex = Vec4f (v.x, v.y, v.z, 1);
 		return m2v4 (Viewport * Projection * ModelView * v2m (gl_vertex));
 	}
 	virtual bool fragment (Vec3f bc_coords, TGAColor &color) {
 		float intensity = varying_intensity * bc_coords; // Interpolating intensity using a dot product.
-		color = TGAColor (255, 255, 255,255) * ((intensity > 0.f)? intensity : 0.f);
+		if (!model->has_texture ())
+			color = TGAColor (255, 255, 255, 255) * ((intensity > 0.f)? intensity : 0.f);
+		else
+			color = model->getTextureColor (varying_texture, bc_coords) * ((intensity > 0.f)? intensity : 0.f); // Model already knows how to interpolate texture coordinates.
 		return false; // No pixel discarding !
 	}
 };

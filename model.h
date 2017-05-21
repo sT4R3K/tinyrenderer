@@ -54,6 +54,7 @@ public:
 	Vec3f vt (int idx);
 	Vec3f vn (int idx);
 	Vec3f normal (int iface, int nthvert);
+	Vec3f vt (int iface, int nthvert);
 };
 
 #endif //__MODEL_H__
