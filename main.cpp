@@ -21,7 +21,7 @@ const int width  = 4800;
 const int height = 4800;
 const int depth  = 255;
 
-Vec3f light_dir (1,-1,1);
+Vec3f light_dir (1,1,1);
 Vec3f eye (1,1,3);
 Vec3f center (0,0,0);
 Vec3f up (0,1,0);
