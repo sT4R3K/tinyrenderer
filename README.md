@@ -39,6 +39,6 @@
    * [6.0](https://github.com/sT4R3K/tinyrenderer/tree/6.0) : Specular mapping.
 
 6. (bis) tangent space normal mapping
-   * [6.1](https://github.com/sT4R3K/tinyrenderer/tree/6.1) : 
-   * [6.2](https://github.com/sT4R3K/tinyrenderer/tree/6.2) : 
-   * [6.3](https://github.com/sT4R3K/tinyrenderer/tree/6.3) : 
+   * [6bis.1](https://github.com/sT4R3K/tinyrenderer/tree/6bis.1) : 
+   * [6bis.2](https://github.com/sT4R3K/tinyrenderer/tree/6bis.2) : 
+   * [6bis.3](https://github.com/sT4R3K/tinyrenderer/tree/6bis.3) : 
