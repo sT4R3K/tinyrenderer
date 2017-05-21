@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 			world_coords.push_back (model->vert(face[k][0])); 
 		
 		screen_coords = m2vs (VP * Projection * ModelView * vs2m (world_coords));
-		// Matrix Normal_transformer = Projection.transpose().inverse();
+		// Matrix Normal_transformer = (Projection * ModelView).transpose().inverse();
 
 		Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
 		n.normalize(); 
