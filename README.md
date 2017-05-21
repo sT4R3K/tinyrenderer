@@ -1,5 +1,5 @@
 
-Output:
+Output: (Light seems to come from behind, wich is not correct!)
 
 | |ShaderNRC (Normals recomputing) | ShaderNRC6  |
 |--------|------------- | ------------- | 
